@@ -542,112 +542,89 @@ select  1 as analysis_id, COUNT(distinct person_id) as count_value
 --
 -- 2	Number of persons by gender
 insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  2 as analysis_id, CAST(gender_concept_id  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
+(select  2 as analysis_id, CAST(gender_concept_id  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
   from  synpuf_100.person
- group by  2 ;
---
+ group by  2)
 
-
+UNION ALL
 
 --
 -- 3	Number of persons by year of birth
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  3 as analysis_id, CAST(year_of_birth  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
+(select  3 as analysis_id, CAST(year_of_birth  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
   from  synpuf_100.person
- group by  2 ;
---
+ group by  2)
 
+UNION ALL
 
 --
 -- 4	Number of persons by race
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  4 as analysis_id, CAST(race_concept_id  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
+(select  4 as analysis_id, CAST(race_concept_id  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
   from  synpuf_100.person
- group by  2 ;
---
+ group by  2)
 
-
+UNION ALL
 
 --
 -- 5	Number of persons by ethnicity
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  5 as analysis_id, CAST(ethnicity_concept_id  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
+(select  5 as analysis_id, CAST(ethnicity_concept_id  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
   from  synpuf_100.person
- group by  2 ;
---
-
-
-
-
+ group by  2);
 
 --
 -- 7	Number of persons with invalid provider_id
 insert into synpuf_100.achilles_results (analysis_id, count_value)
-select  7 as analysis_id, COUNT(p1.person_id) as count_value
+(select  7 as analysis_id, COUNT(p1.person_id) as count_value
  from  synpuf_100.person p1
 	left join synpuf_100.provider pr1
 	on p1.provider_id = pr1.provider_id
 where p1.provider_id is not null
-	and pr1.provider_id is null
-;
---
+	and pr1.provider_id is null)
 
-
+UNION ALL
 
 --
 -- 8	Number of persons with invalid location_id
-insert into synpuf_100.achilles_results (analysis_id, count_value)
-select  8 as analysis_id, COUNT(p1.person_id) as count_value
+(select  8 as analysis_id, COUNT(p1.person_id) as count_value
  from  synpuf_100.person p1
 	left join synpuf_100.location l1
 	on p1.location_id = l1.location_id
 where p1.location_id is not null
-	and l1.location_id is null
-;
---
+	and l1.location_id is null)
 
+UNION ALL
 
 --
 -- 9	Number of persons with invalid care_site_id
-insert into synpuf_100.achilles_results (analysis_id, count_value)
-select  9 as analysis_id, COUNT(p1.person_id) as count_value
+(select  9 as analysis_id, COUNT(p1.person_id) as count_value
  from  synpuf_100.person p1
 	left join synpuf_100.care_site cs1
 	on p1.care_site_id = cs1.care_site_id
 where p1.care_site_id is not null
-	and cs1.care_site_id is null
-;
---
-
-
+	and cs1.care_site_id is null);
 
 --
 -- 10	Number of all persons by year of birth and by gender
 insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, count_value)
  select  10 as analysis_id, CAST(year_of_birth  AS STRING) as stratum_1, CAST(gender_concept_id  AS STRING) as stratum_2, COUNT(distinct person_id) as count_value
   from  synpuf_100.person
- group by  2, 3 ;
---
+ group by  2, 3
 
+UNION ALL
 
 --
 -- 11	Number of non-deceased persons by year of birth and by gender
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, count_value)
  select  11 as analysis_id, CAST(year_of_birth  AS STRING) as stratum_1, CAST(gender_concept_id  AS STRING) as stratum_2, COUNT(distinct person_id) as count_value
   from  synpuf_100.person
 where person_id not in (select  person_id  from  synpuf_100.death)
- group by  2, 3 ;
---
+ group by  2, 3
 
-
+UNION ALL
 
 --
 -- 12	Number of persons by race and ethnicity
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, count_value)
- select  12 as analysis_id, CAST(race_concept_id  AS STRING) as stratum_1, CAST(ethnicity_concept_id  AS STRING) as stratum_2, COUNT(distinct person_id) as count_value
-  from  synpuf_100.person
- group by  2, 3 ;
---
+select  12 as analysis_id, CAST(race_concept_id  AS STRING) as stratum_1, CAST(ethnicity_concept_id  AS STRING) as stratum_2, COUNT(distinct person_id) as count_value
+ from  synpuf_100.person
+group by  2, 3;
 
 /********************************************
 
@@ -795,7 +772,7 @@ join overallstats o on p.age_decile = o.age_decile
 --
 -- 108	Number of persons by length of observation period, in 30d increments
 insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  108 as analysis_id, CAST(floor(DATE_DIFF(cast(op1.observation_period_end_date as date), cast(op1.observation_period_start_date as date), DAY)/30)  AS STRING) as stratum_1, COUNT(distinct p1.person_id) as count_value
+(select  108 as analysis_id, CAST(floor(DATE_DIFF(cast(op1.observation_period_end_date as date), cast(op1.observation_period_start_date as date), DAY)/30)  AS STRING) as stratum_1, COUNT(distinct p1.person_id) as count_value
   from  synpuf_100.person p1
 	inner join 
 	(select  person_id, observation_period_start_date, observation_period_end_date, row_number() over (partition by person_id order by observation_period_start_date asc) as rn1
@@ -803,17 +780,14 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
 	) op1
 	on p1.person_id = op1.person_id
 	where op1.rn1 = 1
- group by  2 ;
---
+ group by  2)
 
-
-
+UNION ALL
 
 --
 -- 109	Number of persons with continuous observation in each year
 -- Note: using temp table instead of nested query because this gives vastly improved performance in Oracle
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
-WITH obs_pd_dates AS (
+(WITH obs_pd_dates AS (
   SELECT distinct  EXTRACT(YEAR from observation_period_start_date) as obs_year, parse_date('%Y%m%d', concat(concat(CAST(EXTRACT(YEAR from observation_period_start_date)  AS STRING), '01'), '01')) as obs_year_start, parse_date('%Y%m%d', concat(concat(CAST(EXTRACT(YEAR from observation_period_start_date)  AS STRING), '12'), '31')) as obs_year_end
   FROM  synpuf_100.observation_period
 ) select  109 as analysis_id, CAST(obs_year  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
@@ -822,16 +796,15 @@ where
 		observation_period_start_date <= obs_year_start
 	and 
 		observation_period_end_date >= obs_year_end
- group by  2 ;
---
+ group by  2)
+
+UNION ALL
 
 
 --
 -- 110	Number of persons with continuous observation in each month
 -- Note: using temp table instead of nested query because this gives vastly improved performance in Oracle
-
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
-WITH obs_pd_dates AS (
+(WITH obs_pd_dates AS (
   SELECT distinct  EXTRACT(YEAR from observation_period_start_date)*100 + EXTRACT(MONTH from observation_period_start_date) as obs_month, parse_date('%Y%m%d', concat(concat(CAST(EXTRACT(YEAR from observation_period_start_date)  AS STRING), SUBSTR(concat('0', CAST(EXTRACT(MONTH from observation_period_start_date)  AS STRING)),-2)), '01'))
   as obs_month_start, DATE_ADD(cast(DATE_ADD(cast(parse_date('%Y%m%d', concat(concat(CAST(EXTRACT(YEAR from observation_period_start_date)  AS STRING), SUBSTR(concat('0', CAST(EXTRACT(MONTH from observation_period_start_date)  AS STRING)),-2)), '01')) as date), interval 1 MONTH) as date), interval -1 DAY) as obs_month_end
   FROM  synpuf_100.observation_period
@@ -841,38 +814,32 @@ where
 		observation_period_start_date <= obs_month_start
 	and
 		observation_period_end_date >= obs_month_end
- group by  2 ;
---
+ group by  2)
 
-
+UNION ALL
 
 --
 -- 111	Number of persons by observation period start month
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  111 as analysis_id, CAST(EXTRACT(YEAR from observation_period_start_date)*100 + EXTRACT(MONTH from observation_period_start_date)  AS STRING) as stratum_1, COUNT(distinct op1.person_id) as count_value
+(select  111 as analysis_id, CAST(EXTRACT(YEAR from observation_period_start_date)*100 + EXTRACT(MONTH from observation_period_start_date)  AS STRING) as stratum_1, COUNT(distinct op1.person_id) as count_value
   from  synpuf_100.observation_period op1
- group by  2 ;
---
+ group by  2)
 
-
+UNION ALL
 
 --
 -- 112	Number of persons by observation period end month
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  112 as analysis_id, CAST(EXTRACT(YEAR from observation_period_end_date)*100 + EXTRACT(MONTH from observation_period_end_date)  AS STRING) as stratum_1, COUNT(distinct op1.person_id) as count_value
+(select  112 as analysis_id, CAST(EXTRACT(YEAR from observation_period_end_date)*100 + EXTRACT(MONTH from observation_period_end_date)  AS STRING) as stratum_1, COUNT(distinct op1.person_id) as count_value
   from  synpuf_100.observation_period op1
- group by  2 ;
---
+group by  2)
 
+UNION ALL
 
 --
 -- 113	Number of persons by number of observation periods
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  113 as analysis_id, CAST(op1.num_periods  AS STRING) as stratum_1, COUNT(distinct op1.person_id) as count_value
+(select  113 as analysis_id, CAST(op1.num_periods  AS STRING) as stratum_1, COUNT(distinct op1.person_id) as count_value
   from  ( select  person_id, COUNT(observation_period_start_date) as num_periods   from  synpuf_100.observation_period  group by  1 ) op1
- group by  op1.num_periods
- ;
---
+ group by  op1.num_periods);
+
 
 --
 -- 114	Number of persons with observation period before year-of-birth
@@ -970,13 +937,13 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
  select  200 as analysis_id, CAST(vo1.visit_concept_id  AS STRING) as stratum_1, COUNT(distinct vo1.person_id) as count_value
   from  synpuf_100.visit_occurrence vo1
  group by  vo1.visit_concept_id
- ;
---
+
+
+UNION ALL
 
 
 --
 -- 201	Number of visit occurrence records, by visit_concept_id
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
  select  201 as analysis_id, CAST(vo1.visit_concept_id  AS STRING) as stratum_1, COUNT(vo1.person_id) as count_value
   from  synpuf_100.visit_occurrence vo1
  group by  vo1.visit_concept_id
@@ -1052,57 +1019,52 @@ select  206 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(
 join overallstats o on p.stratum1_id = o.stratum1_id and p.stratum2_id = o.stratum2_id 
  group by  o.stratum1_id, o.stratum2_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
---
 
 
 --
 --207	Number of visit records with invalid person_id
 insert into synpuf_100.achilles_results (analysis_id, count_value)
-select  207 as analysis_id, COUNT(vo1.person_id) as count_value
+(select  207 as analysis_id, COUNT(vo1.person_id) as count_value
  from 
 	synpuf_100.visit_occurrence vo1
 	left join synpuf_100.person p1
 	on p1.person_id = vo1.person_id
-where p1.person_id is null
-;
---
+where p1.person_id is null)
+
+UNION ALL
 
 
 --
 --208	Number of visit records outside valid observation period
-insert into synpuf_100.achilles_results (analysis_id, count_value)
-select  208 as analysis_id, COUNT(vo1.person_id) as count_value
+(select  208 as analysis_id, COUNT(vo1.person_id) as count_value
  from 
 	synpuf_100.visit_occurrence vo1
 	left join synpuf_100.observation_period op1
 	on op1.person_id = vo1.person_id
 	and vo1.visit_start_date >= op1.observation_period_start_date
 	and vo1.visit_start_date <= op1.observation_period_end_date
-where op1.person_id is null
-;
---
+where op1.person_id is null)
+
+UNION ALL
 
 --
 --209	Number of visit records with end date < start date
-insert into synpuf_100.achilles_results (analysis_id, count_value)
-select  209 as analysis_id, COUNT(vo1.person_id) as count_value
+(select  209 as analysis_id, COUNT(vo1.person_id) as count_value
  from 
 	synpuf_100.visit_occurrence vo1
-where visit_end_date < visit_start_date
-;
---
+where visit_end_date < visit_start_date)
+
+UNION ALL
 
 --
 --210	Number of visit records with invalid care_site_id
-insert into synpuf_100.achilles_results (analysis_id, count_value)
-select  210 as analysis_id, COUNT(vo1.person_id) as count_value
+(select  210 as analysis_id, COUNT(vo1.person_id) as count_value
  from 
 	synpuf_100.visit_occurrence vo1
 	left join synpuf_100.care_site cs1
 	on vo1.care_site_id = cs1.care_site_id
 where vo1.care_site_id is not null
-	and cs1.care_site_id is null
-;
+	and cs1.care_site_id is null);
 --
 
 
@@ -1207,19 +1169,14 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
  select  400 as analysis_id, CAST(co1.condition_concept_id  AS STRING) as stratum_1, COUNT(distinct co1.person_id) as count_value
   from  synpuf_100.condition_occurrence co1
  group by  co1.condition_concept_id
- ;
---
 
+UNION ALL
 
 --
 -- 401	Number of condition occurrence records, by condition_concept_id
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  401 as analysis_id, CAST(co1.condition_concept_id  AS STRING) as stratum_1, COUNT(co1.person_id) as count_value
+select  401 as analysis_id, CAST(co1.condition_concept_id  AS STRING) as stratum_1, COUNT(co1.person_id) as count_value
   from  synpuf_100.condition_occurrence co1
- group by  co1.condition_concept_id
- ;
---
-
+group by  co1.condition_concept_id;
 
 
 --
@@ -1228,8 +1185,6 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
  select  402 as analysis_id, CAST(co1.condition_concept_id  AS STRING) as stratum_1, CAST(EXTRACT(YEAR from condition_start_date)*100 + EXTRACT(MONTH from condition_start_date)  AS STRING) as stratum_2, COUNT(distinct person_id) as count_value
   from  synpuf_100.condition_occurrence co1
  group by  co1.condition_concept_id, 3 ;
---
-
 
 
 --
@@ -1247,9 +1202,6 @@ select  403 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.
 cross join overallstats o
  group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
---
-
-
 
 --
 -- 404	Number of persons with at least one condition occurrence, by condition_concept_id by calendar year by gender by age decile
@@ -1260,7 +1212,6 @@ inner join
 synpuf_100.condition_occurrence co1
 on p1.person_id = co1.person_id
  group by  co1.condition_concept_id, 3, p1.gender_concept_id, 5 ;
---
 
 --
 -- 405	Number of condition occurrence records, by condition_concept_id by condition_type_concept_id
@@ -1269,7 +1220,6 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
   from  synpuf_100.condition_occurrence co1
  group by  co1.condition_concept_id, co1.condition_type_concept_id
  ;
---
 
 
 
@@ -1297,73 +1247,67 @@ select  406 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(
 join overallstats o on p.stratum1_id = o.stratum1_id and p.stratum2_id = o.stratum2_id 
  group by  o.stratum1_id, o.stratum2_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
---
 
 
 --
 -- 409	Number of condition occurrence records with invalid person_id
 insert into synpuf_100.achilles_results (analysis_id, count_value)
-select  409 as analysis_id, COUNT(co1.person_id) as count_value
+(select  409 as analysis_id, COUNT(co1.person_id) as count_value
  from 
 	synpuf_100.condition_occurrence co1
 	left join synpuf_100.person p1
 	on p1.person_id = co1.person_id
-where p1.person_id is null
-;
---
+where p1.person_id is null)
+
+UNION ALL
 
 
 --
 -- 410	Number of condition occurrence records outside valid observation period
-insert into synpuf_100.achilles_results (analysis_id, count_value)
-select  410 as analysis_id, COUNT(co1.person_id) as count_value
+(select  410 as analysis_id, COUNT(co1.person_id) as count_value
  from 
 	synpuf_100.condition_occurrence co1
 	left join synpuf_100.observation_period op1
 	on op1.person_id = co1.person_id
 	and co1.condition_start_date >= op1.observation_period_start_date
 	and co1.condition_start_date <= op1.observation_period_end_date
-where op1.person_id is null
-;
---
+where op1.person_id is null)
+
+UNION ALL
 
 
 --
 -- 411	Number of condition occurrence records with end date < start date
-insert into synpuf_100.achilles_results (analysis_id, count_value)
-select  411 as analysis_id, COUNT(co1.person_id) as count_value
+(select  411 as analysis_id, COUNT(co1.person_id) as count_value
  from 
 	synpuf_100.condition_occurrence co1
-where co1.condition_end_date < co1.condition_start_date
-;
---
+where co1.condition_end_date < co1.condition_start_date)
+
+UNION ALL
 
 
 --
 -- 412	Number of condition occurrence records with invalid provider_id
-insert into synpuf_100.achilles_results (analysis_id, count_value)
-select  412 as analysis_id, COUNT(co1.person_id) as count_value
+(select  412 as analysis_id, COUNT(co1.person_id) as count_value
  from 
 	synpuf_100.condition_occurrence co1
 	left join synpuf_100.provider p1
 	on p1.provider_id = co1.provider_id
 where co1.provider_id is not null
-	and p1.provider_id is null
-;
---
+	and p1.provider_id is null)
+
+UNION ALL
 
 --
 -- 413	Number of condition occurrence records with invalid visit_id
-insert into synpuf_100.achilles_results (analysis_id, count_value)
-select  413 as analysis_id, COUNT(co1.person_id) as count_value
+(select  413 as analysis_id, COUNT(co1.person_id) as count_value
  from 
 	synpuf_100.condition_occurrence co1
 	left join synpuf_100.visit_occurrence vo1
 	on co1.visit_occurrence_id = vo1.visit_occurrence_id
 where co1.visit_occurrence_id is not null
-	and vo1.visit_occurrence_id is null
-;
---
+	and vo1.visit_occurrence_id is null);
+
 
 --
 -- 420	Number of condition occurrence records by condition occurrence start month
@@ -1381,37 +1325,30 @@ ACHILLES Analyses on DEATH table
 
 *********************************************/
 
-
-
 --
 -- 500	Number of persons with death, by cause_concept_id
 insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  500 as analysis_id, CAST(d1.cause_concept_id  AS STRING) as stratum_1, COUNT(distinct d1.person_id) as count_value
+
+  (select  500 as analysis_id, CAST(d1.cause_concept_id  AS STRING) as stratum_1, COUNT(distinct d1.person_id) as count_value
   from  synpuf_100.death d1
- group by  d1.cause_concept_id
- ;
---
+ group by  d1.cause_concept_id)
+
+UNION ALL
 
 
 --
 -- 501	Number of records of death, by cause_concept_id
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  501 as analysis_id, CAST(d1.cause_concept_id  AS STRING) as stratum_1, COUNT(d1.person_id) as count_value
+(select  501 as analysis_id, CAST(d1.cause_concept_id  AS STRING) as stratum_1, COUNT(d1.person_id) as count_value
   from  synpuf_100.death d1
- group by  d1.cause_concept_id
- ;
---
+ group by  d1.cause_concept_id)
 
-
+UNION ALL
 
 --
 -- 502	Number of persons by condition occurrence start month
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  502 as analysis_id, CAST(EXTRACT(YEAR from death_date)*100 + EXTRACT(MONTH from death_date)  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
+(select  502 as analysis_id, CAST(EXTRACT(YEAR from death_date)*100 + EXTRACT(MONTH from death_date)  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
   from  synpuf_100.death d1
- group by  2 ;
---
-
+ group by  2);
 
 
 --
@@ -1469,14 +1406,11 @@ select  509 as analysis_id, COUNT(d1.person_id) as count_value
 		left join synpuf_100.person p1
 		on d1.person_id = p1.person_id
 where p1.person_id is null
-;
---
 
-
+UNION ALL
 
 --
 -- 510	Number of death records outside valid observation period
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  510 as analysis_id, COUNT(d1.person_id) as count_value
  from 
 	synpuf_100.death d1
@@ -1503,14 +1437,12 @@ select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY) a
 		  from  synpuf_100.condition_occurrence
 		 group by  1 ) t0 on d1.person_id = t0.person_id
 ) t1
-;
---
 
+UNION ALL
 
 --
 -- 512	Distribution of time from death to last drug
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY)  as count_value  from  synpuf_100.death d1
+(WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY)  as count_value  from  synpuf_100.death d1
   inner join
 	(
 		 select  person_id, max(drug_exposure_start_date) as max_date
@@ -1526,15 +1458,13 @@ WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date
 select  512 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
- group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
- ;
---
+ group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value)
 
+UNION ALL
 
 --
 -- 513	Distribution of time from death to last visit
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY)  as count_value  from  synpuf_100.death d1
+(WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY)  as count_value  from  synpuf_100.death d1
 	inner join
 	(
 		 select  person_id, max(visit_start_date) as max_date
@@ -1550,15 +1480,13 @@ WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date
 select  513 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
- group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
- ;
---
+ group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value)
 
+UNION ALL
 
 --
 -- 514	Distribution of time from death to last procedure
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY)  as count_value  from  synpuf_100.death d1
+(WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY)  as count_value  from  synpuf_100.death d1
 	inner join
 	(
 		 select  person_id, max(procedure_date) as max_date
@@ -1574,32 +1502,70 @@ WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date
 select  514 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
- group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
- ;
---
+ group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value)
 
+UNION ALL
 
 --
 -- 515	Distribution of time from death to last observation
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY)  as count_value  from  synpuf_100.death d1
-	inner join
-	(
-		 select  person_id, max(observation_date) as max_date
-		  from  synpuf_100.observation
-		 group by  1 ) t0
-	on d1.person_id = t0.person_id
-), overallstats  as (select  cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total  from  rawdata
-), statsview  as ( select  count_value as count_value, COUNT(*)  as total, row_number() over (order by count_value)  as rn   from  rawdata
-   group by  1 ), priorstats  as ( select  s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
-  join statsview p on p.rn <= s.rn
-   group by  s.count_value, s.total, s.rn
- )
-select  515 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
-  FROM  priorstats p
-cross join overallstats o
- group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
- ;
+(WITH rawdata AS (SELECT DATE_DIFF(cast(t0.max_date AS DATE), cast(d1.death_date AS DATE), DAY) AS count_value
+                  FROM synpuf_100.death d1
+                      INNER JOIN
+                      (
+                          SELECT
+                              person_id,
+                              max(observation_date) AS max_date
+                          FROM synpuf_100.observation
+                          GROUP BY 1) t0
+                          ON d1.person_id = t0.person_id
+), overallstats AS (SELECT
+                        cast(avg(1.0 * count_value) AS FLOAT64) AS avg_value,
+                        cast(STDDEV(count_value) AS FLOAT64)    AS stdev_value,
+                        min(count_value)                        AS min_value,
+                        max(count_value)                        AS max_value,
+                        COUNT(*)                                AS total
+                    FROM rawdata
+), statsview AS ( SELECT
+                      count_value                AS count_value,
+                      COUNT(*)                   AS total,
+                      row_number()
+                      OVER (
+                          ORDER BY count_value ) AS rn
+                  FROM rawdata
+                  GROUP BY 1 ), priorstats AS ( SELECT
+                                                    s.count_value AS count_value,
+                                                    s.total       AS total,
+                                                    sum(p.total)  AS accumulated
+                                                FROM statsview s
+                                                    JOIN statsview p ON p.rn <= s.rn
+                                                GROUP BY s.count_value, s.total, s.rn
+)
+SELECT
+    515                       AS analysis_id,
+    o.total                   AS count_value,
+    o.min_value,
+    o.max_value,
+    o.avg_value,
+    o.stdev_value,
+    min(CASE WHEN p.accumulated >= .50 * o.total
+        THEN count_value
+        ELSE o.max_value END) AS median_value,
+    min(CASE WHEN p.accumulated >= .10 * o.total
+        THEN count_value
+        ELSE o.max_value END) AS p10_value,
+    min(CASE WHEN p.accumulated >= .25 * o.total
+        THEN count_value
+        ELSE o.max_value END) AS p25_value,
+    min(CASE WHEN p.accumulated >= .75 * o.total
+        THEN count_value
+        ELSE o.max_value END) AS p75_value,
+    min(CASE WHEN p.accumulated >= .90 * o.total
+        THEN count_value
+        ELSE o.max_value END) AS p90_value
+FROM priorstats p
+    CROSS JOIN overallstats o
+GROUP BY o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
+);
 --
 
 
@@ -1719,13 +1685,11 @@ select  609 as analysis_id, COUNT(po1.person_id) as count_value
 	left join synpuf_100.person p1
 	on p1.person_id = po1.person_id
 where p1.person_id is null
-;
---
 
+UNION ALL
 
 --
 -- 610	Number of procedure occurrence records outside valid observation period
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  610 as analysis_id, COUNT(po1.person_id) as count_value
  from 
 	synpuf_100.procedure_occurrence po1
@@ -1734,14 +1698,11 @@ select  610 as analysis_id, COUNT(po1.person_id) as count_value
 	and po1.procedure_date >= op1.observation_period_start_date
 	and po1.procedure_date <= op1.observation_period_end_date
 where op1.person_id is null
-;
---
 
-
+UNION ALL
 
 --
 -- 612	Number of procedure occurrence records with invalid provider_id
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  612 as analysis_id, COUNT(po1.person_id) as count_value
  from 
 	synpuf_100.procedure_occurrence po1
@@ -1749,12 +1710,11 @@ select  612 as analysis_id, COUNT(po1.person_id) as count_value
 	on p1.provider_id = po1.provider_id
 where po1.provider_id is not null
 	and p1.provider_id is null
-;
---
+
+UNION ALL
 
 --
 -- 613	Number of procedure occurrence records with invalid visit_id
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  613 as analysis_id, COUNT(po1.person_id) as count_value
  from 
 	synpuf_100.procedure_occurrence po1
@@ -1802,13 +1762,11 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
  select  700 as analysis_id, CAST(de1.drug_concept_id  AS STRING) as stratum_1, COUNT(distinct de1.person_id) as count_value
   from  synpuf_100.drug_exposure de1
  group by  de1.drug_concept_id
- ;
---
 
+UNION ALL
 
 --
 -- 701	Number of drug occurrence records, by drug_concept_id
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
  select  701 as analysis_id, CAST(de1.drug_concept_id  AS STRING) as stratum_1, COUNT(de1.person_id) as count_value
   from  synpuf_100.drug_exposure de1
  group by  de1.drug_concept_id
@@ -1907,13 +1865,12 @@ select  709 as analysis_id, COUNT(de1.person_id) as count_value
 	left join synpuf_100.person p1
 	on p1.person_id = de1.person_id
 where p1.person_id is null
-;
---
+
+UNION ALL
 
 
 --
 -- 710	Number of drug exposure records outside valid observation period
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  710 as analysis_id, COUNT(de1.person_id) as count_value
  from 
 	synpuf_100.drug_exposure de1
@@ -1922,24 +1879,20 @@ select  710 as analysis_id, COUNT(de1.person_id) as count_value
 	and de1.drug_exposure_start_date >= op1.observation_period_start_date
 	and de1.drug_exposure_start_date <= op1.observation_period_end_date
 where op1.person_id is null
-;
---
 
+UNION ALL
 
 --
 -- 711	Number of drug exposure records with end date < start date
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  711 as analysis_id, COUNT(de1.person_id) as count_value
  from 
 	synpuf_100.drug_exposure de1
 where de1.drug_exposure_end_date < de1.drug_exposure_start_date
-;
---
 
+UNION ALL
 
 --
 -- 712	Number of drug exposure records with invalid provider_id
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  712 as analysis_id, COUNT(de1.person_id) as count_value
  from 
 	synpuf_100.drug_exposure de1
@@ -1947,12 +1900,11 @@ select  712 as analysis_id, COUNT(de1.person_id) as count_value
 	on p1.provider_id = de1.provider_id
 where de1.provider_id is not null
 	and p1.provider_id is null
-;
---
+
+UNION ALL
 
 --
 -- 713	Number of drug exposure records with invalid visit_id
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  713 as analysis_id, COUNT(de1.person_id) as count_value
  from 
 	synpuf_100.drug_exposure de1
@@ -1968,7 +1920,7 @@ where de1.visit_occurrence_id is not null
 --
 -- 715	Distribution of days_supply by drug_concept_id
 insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-WITH rawdata as (select  drug_concept_id as stratum_id, days_supply  as count_value  from  synpuf_100.drug_exposure 
+(WITH rawdata as (select  drug_concept_id as stratum_id, days_supply  as count_value  from  synpuf_100.drug_exposure
 	where days_supply is not null
 ), overallstats  as ( select  stratum_id as stratum_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata
 	 group by  1 ), statsview  as ( select  stratum_id as stratum_id, count_value as count_value, COUNT(*)  as total, row_number() over (order by count_value)  as rn   from  rawdata
@@ -1979,15 +1931,13 @@ WITH rawdata as (select  drug_concept_id as stratum_id, days_supply  as count_va
 select  715 as analysis_id, CAST(o.stratum_id  AS STRING) as stratum_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum_id = o.stratum_id
- group by  o.stratum_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
- ;
---
+ group by  o.stratum_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value)
 
+UNION ALL
 
 --
 -- 716	Distribution of refills by drug_concept_id
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-WITH rawdata as (select  drug_concept_id as stratum_id, refills  as count_value  from  synpuf_100.drug_exposure 
+(WITH rawdata as (select  drug_concept_id as stratum_id, refills  as count_value  from  synpuf_100.drug_exposure
 	where refills is not null
 ), overallstats  as ( select  stratum_id as stratum_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata
 	 group by  1 ), statsview  as ( select  stratum_id as stratum_id, count_value as count_value, COUNT(*)  as total, row_number() over (order by count_value)  as rn   from  rawdata
@@ -1998,16 +1948,13 @@ WITH rawdata as (select  drug_concept_id as stratum_id, refills  as count_value 
 select  716 as analysis_id, CAST(o.stratum_id  AS STRING) as stratum_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum_id = o.stratum_id
- group by  o.stratum_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
- ;
---
+ group by  o.stratum_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value)
 
-
+UNION ALL
 
 --
 -- 717	Distribution of quantity by drug_concept_id
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-WITH rawdata as (select  drug_concept_id as stratum_id, cast(quantity  as float64)  as count_value  from  synpuf_100.drug_exposure 
+(WITH rawdata as (select  drug_concept_id as stratum_id, cast(quantity  as float64)  as count_value  from  synpuf_100.drug_exposure
 	where quantity is not null
 ), overallstats  as ( select  stratum_id as stratum_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata
 	 group by  1 ), statsview  as ( select  stratum_id as stratum_id, count_value as count_value, COUNT(*)  as total, row_number() over (order by count_value)  as rn   from  rawdata
@@ -2018,8 +1965,8 @@ WITH rawdata as (select  drug_concept_id as stratum_id, cast(quantity  as float6
 select  717 as analysis_id, CAST(o.stratum_id  AS STRING) as stratum_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum_id = o.stratum_id
- group by  o.stratum_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
- ;
+ group by  o.stratum_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value)
+;
 --
 
 
@@ -2205,12 +2152,11 @@ select  812 as analysis_id, COUNT(o1.person_id) as count_value
 	on p1.provider_id = o1.provider_id
 where o1.provider_id is not null
 	and p1.provider_id is null
-;
---
+
+UNION ALL
 
 --
 -- 813	Number of observation records with invalid visit_id
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  813 as analysis_id, COUNT(o1.person_id) as count_value
  from 
 	synpuf_100.observation o1
@@ -2218,13 +2164,11 @@ select  813 as analysis_id, COUNT(o1.person_id) as count_value
 	on o1.visit_occurrence_id = vo1.visit_occurrence_id
 where o1.visit_occurrence_id is not null
 	and vo1.visit_occurrence_id is null
-;
---
 
+UNION ALL
 
 --
 -- 814	Number of observation records with no value (numeric, string, or concept)
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  814 as analysis_id, COUNT(o1.person_id) as count_value
  from 
 	synpuf_100.observation o1
@@ -2255,19 +2199,6 @@ select  815 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(
 join overallstats o on p.stratum1_id = o.stratum1_id and p.stratum2_id = o.stratum2_id 
  group by  o.stratum1_id, o.stratum2_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
---
-
-
---
-
-
---
-
-
-
---
-
-
 
 --
 -- 820	Number of observation records by condition occurrence start month
@@ -2275,9 +2206,6 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
  select  820 as analysis_id, CAST(EXTRACT(YEAR from observation_date)*100 + EXTRACT(MONTH from observation_date)  AS STRING) as stratum_1, COUNT(person_id) as count_value
   from  synpuf_100.observation o1
  group by  2 ;
---
-
-
 
 --
 -- 891	Number of total persons that have at least x observations
@@ -2420,13 +2348,12 @@ select  908 as analysis_id, COUNT(de1.person_id) as count_value
 	left join synpuf_100.person p1
 	on p1.person_id = de1.person_id
 where p1.person_id is null
-;
---
+
+UNION ALL
 
 
 --
 -- 909	Number of drug eras outside valid observation period
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  909 as analysis_id, COUNT(de1.person_id) as count_value
  from 
 	synpuf_100.drug_era de1
@@ -2435,13 +2362,12 @@ select  909 as analysis_id, COUNT(de1.person_id) as count_value
 	and de1.drug_era_start_date >= op1.observation_period_start_date
 	and de1.drug_era_start_date <= op1.observation_period_end_date
 where op1.person_id is null
-;
---
+
+UNION ALL
 
 
 --
 -- 910	Number of drug eras with end date < start date
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  910 as analysis_id, COUNT(de1.person_id) as count_value
  from 
 	synpuf_100.drug_era de1
@@ -2579,59 +2505,49 @@ select  1007 as analysis_id, CAST(p.stratum1_id  AS STRING) as stratum_1, o.tota
 join overallstats o on p.stratum1_id = o.stratum1_id
  group by  p.stratum1_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
---
-
-
 
 --
 -- 1008	Number of condition eras with invalid person
 insert into synpuf_100.achilles_results (analysis_id, count_value)
-select  1008 as analysis_id, COUNT(ce1.person_id) as count_value
+
+(select  1008 as analysis_id, COUNT(ce1.person_id) as count_value
  from 
 	synpuf_100.condition_era ce1
 	left join synpuf_100.person p1
 	on p1.person_id = ce1.person_id
-where p1.person_id is null
-;
---
+where p1.person_id is null)
 
+UNION ALL
 
 --
 -- 1009	Number of condition eras outside valid observation period
-insert into synpuf_100.achilles_results (analysis_id, count_value)
-select  1009 as analysis_id, COUNT(ce1.person_id) as count_value
+(select  1009 as analysis_id, COUNT(ce1.person_id) as count_value
  from 
 	synpuf_100.condition_era ce1
 	left join synpuf_100.observation_period op1
 	on op1.person_id = ce1.person_id
 	and ce1.condition_era_start_date >= op1.observation_period_start_date
 	and ce1.condition_era_start_date <= op1.observation_period_end_date
-where op1.person_id is null
-;
---
+where op1.person_id is null)
 
+UNION ALL
 
 --
 -- 1010	Number of condition eras with end date < start date
-insert into synpuf_100.achilles_results (analysis_id, count_value)
-select  1010 as analysis_id, COUNT(ce1.person_id) as count_value
+(select  1010 as analysis_id, COUNT(ce1.person_id) as count_value
  from 
 	synpuf_100.condition_era ce1
-where ce1.condition_era_end_date < ce1.condition_era_start_date
-;
---
+where ce1.condition_era_end_date < ce1.condition_era_start_date);
 
 
 --
 -- 1020	Number of drug era records by drug era start month
 insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  1020 as analysis_id, CAST(EXTRACT(YEAR from condition_era_start_date)*100 + EXTRACT(MONTH from condition_era_start_date)  AS STRING) as stratum_1, COUNT(person_id) as count_value
+(select  1020 as analysis_id, CAST(EXTRACT(YEAR from condition_era_start_date)*100 + EXTRACT(MONTH from condition_era_start_date)  AS STRING) as stratum_1, COUNT(person_id) as count_value
   from  synpuf_100.condition_era ce1
- group by  2 ;
---
+ group by  2)
 
-
-
+UNION ALL
 
 /********************************************
 
@@ -2641,54 +2557,55 @@ ACHILLES Analyses on LOCATION table
 
 --
 -- 1100	Number of persons by location 3-digit zip
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  1100 as analysis_id, CAST(SUBSTR(l1.zip,0,3)  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
+
+(select  1100 as analysis_id, CAST(SUBSTR(l1.zip,0,3)  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
   from  synpuf_100.person p1
 	inner join synpuf_100.location l1
 	on p1.location_id = l1.location_id
 where p1.location_id is not null
 	and l1.zip is not null
- group by  2 ;
---
+ group by  2)
 
+UNION ALL
 
 --
 -- 1101	Number of persons by location state
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  1101 as analysis_id, CAST(l1.state  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
+(select  1101 as analysis_id, CAST(l1.state  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
   from  synpuf_100.person p1
 	inner join synpuf_100.location l1
 	on p1.location_id = l1.location_id
 where p1.location_id is not null
 	and l1.state is not null
- group by  l1.state ;
---
+ group by  l1.state)
 
+
+UNION ALL
 
 --
 -- 1102	Number of care sites by location 3-digit zip
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  1102 as analysis_id, CAST(SUBSTR(l1.zip,0,3)  AS STRING) as stratum_1, COUNT(distinct care_site_id) as count_value
+(select  1102 as analysis_id, CAST(SUBSTR(l1.zip,0,3)  AS STRING) as stratum_1, COUNT(distinct care_site_id) as count_value
   from  synpuf_100.care_site cs1
 	inner join synpuf_100.location l1
 	on cs1.location_id = l1.location_id
 where cs1.location_id is not null
 	and l1.zip is not null
- group by  2 ;
---
+ group by  2)
 
+
+UNION ALL
 
 --
 -- 1103	Number of care sites by location state
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  1103 as analysis_id, CAST(l1.state  AS STRING) as stratum_1, COUNT(distinct care_site_id) as count_value
+(select  1103 as analysis_id, CAST(l1.state  AS STRING) as stratum_1, COUNT(distinct care_site_id) as count_value
   from  synpuf_100.care_site cs1
 	inner join synpuf_100.location l1
 	on cs1.location_id = l1.location_id
 where cs1.location_id is not null
 	and l1.state is not null
- group by  l1.state ;
---
+ group by  l1.state)
+
+
+UNION ALL
 
 
 /********************************************
@@ -2700,37 +2617,37 @@ ACHILLES Analyses on CARE_SITE table
 
 --
 -- 1200	Number of persons by place of service
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  1200 as analysis_id, CAST(cs1.place_of_service_concept_id  AS STRING) as stratum_1, COUNT(person_id) as count_value
+ (select  1200 as analysis_id, CAST(cs1.place_of_service_concept_id  AS STRING) as stratum_1, COUNT(person_id) as count_value
   from  synpuf_100.person p1
 	inner join synpuf_100.care_site cs1
 	on p1.care_site_id = cs1.care_site_id
 where p1.care_site_id is not null
 	and cs1.place_of_service_concept_id is not null
- group by  cs1.place_of_service_concept_id ;
---
+ group by  cs1.place_of_service_concept_id)
+
+
+UNION ALL
 
 
 --
 -- 1201	Number of visits by place of service
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  1201 as analysis_id, CAST(cs1.place_of_service_concept_id  AS STRING) as stratum_1, COUNT(visit_occurrence_id) as count_value
+ (select  1201 as analysis_id, CAST(cs1.place_of_service_concept_id  AS STRING) as stratum_1, COUNT(visit_occurrence_id) as count_value
   from  synpuf_100.visit_occurrence vo1
 	inner join synpuf_100.care_site cs1
 	on vo1.care_site_id = cs1.care_site_id
 where vo1.care_site_id is not null
 	and cs1.place_of_service_concept_id is not null
- group by  cs1.place_of_service_concept_id ;
---
+ group by  cs1.place_of_service_concept_id)
 
+
+UNION ALL
 
 --
 -- 1202	Number of care sites by place of service
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  1202 as analysis_id, CAST(cs1.place_of_service_concept_id  AS STRING) as stratum_1, COUNT(care_site_id) as count_value
+ (select  1202 as analysis_id, CAST(cs1.place_of_service_concept_id  AS STRING) as stratum_1, COUNT(care_site_id) as count_value
   from  synpuf_100.care_site cs1
 where cs1.place_of_service_concept_id is not null
- group by  cs1.place_of_service_concept_id ;
+ group by  cs1.place_of_service_concept_id);
 --
 
 
@@ -2801,13 +2718,10 @@ join overallstats o on p.stratum_id = o.stratum_id
  ;
 --
 
-
-
-
 --
 -- 1408	Number of persons by length of payer plan period, in 30d increments
 insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  1408 as analysis_id, CAST(floor(DATE_DIFF(cast(ppp1.payer_plan_period_end_date as date), cast(ppp1.payer_plan_period_start_date as date), DAY)/30)  AS STRING) as stratum_1, COUNT(distinct p1.person_id) as count_value
+(select  1408 as analysis_id, CAST(floor(DATE_DIFF(cast(ppp1.payer_plan_period_end_date as date), cast(ppp1.payer_plan_period_start_date as date), DAY)/30)  AS STRING) as stratum_1, COUNT(distinct p1.person_id) as count_value
   from  synpuf_100.person p1
 	inner join 
 	(select  person_id, payer_plan_period_start_date, payer_plan_period_end_date, row_number() over (partition by person_id order by payer_plan_period_start_date asc) as rn1
@@ -2815,15 +2729,14 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
 	) ppp1
 	on p1.person_id = ppp1.person_id
 	where ppp1.rn1 = 1
- group by  2 ;
---
+ group by  2)
 
+UNION ALL
 
 --
 -- 1409	Number of persons with continuous payer plan in each year
 -- Note: using temp table instead of nested query because this gives vastly improved
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
-WITH obs_pd_dates AS (
+(WITH obs_pd_dates AS (
   SELECT distinct  EXTRACT(YEAR from payer_plan_period_start_date) as obs_year 
   FROM  
   synpuf_100.payer_plan_period
@@ -2835,16 +2748,14 @@ WITH obs_pd_dates AS (
 	, obs_pd_dates  t1 
 where EXTRACT(YEAR from ppp1.payer_plan_period_start_date) <= t1.obs_year
 	and EXTRACT(YEAR from ppp1.payer_plan_period_end_date) >= t1.obs_year
- group by  t1.obs_year
- ;
---
+ group by  t1.obs_year)
 
+UNION ALL
 
 --
 -- 1410	Number of persons with continuous payer plan in each month
 -- Note: using temp table instead of nested query because this gives vastly improved performance in Oracle
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
-WITH obs_pd_dates AS (
+(WITH obs_pd_dates AS (
   SELECT distinct  EXTRACT(YEAR from payer_plan_period_start_date)*100 + EXTRACT(MONTH from payer_plan_period_start_date) as obs_month, parse_date('%Y%m%d', concat(concat(CAST(EXTRACT(YEAR from payer_plan_period_start_date)  AS STRING), SUBSTR(concat('0', CAST(EXTRACT(MONTH from payer_plan_period_start_date)  AS STRING)),-2)), '01')) as obs_month_start, DATE_ADD(cast(DATE_ADD(cast(parse_date('%Y%m%d', concat(concat(CAST(EXTRACT(YEAR from payer_plan_period_start_date)  AS STRING), SUBSTR(concat('0', CAST(EXTRACT(MONTH from payer_plan_period_start_date)  AS STRING)),-2)), '01')) as date), interval 1 MONTH) as date), interval -1 DAY) as obs_month_end
   FROM  
   synpuf_100.payer_plan_period
@@ -2856,44 +2767,38 @@ WITH obs_pd_dates AS (
 	, obs_pd_dates 
 where ppp1.payer_plan_period_start_date <= obs_month_start
 	and ppp1.payer_plan_period_end_date >= obs_month_end
- group by  2 ;
---
+ group by  2)
 
-
+UNION ALL
 
 --
 -- 1411	Number of persons by payer plan period start month
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  1411 as analysis_id, CAST(concat(CAST(EXTRACT(YEAR from payer_plan_period_start_date)  AS STRING), concat(SUBSTR(concat('0', CAST(EXTRACT(MONTH from payer_plan_period_start_date)  AS STRING)),-2),'01'))  AS STRING) as stratum_1, COUNT(distinct p1.person_id) as count_value
+(select  1411 as analysis_id, CAST(concat(CAST(EXTRACT(YEAR from payer_plan_period_start_date)  AS STRING), concat(SUBSTR(concat('0', CAST(EXTRACT(MONTH from payer_plan_period_start_date)  AS STRING)),-2),'01'))  AS STRING) as stratum_1, COUNT(distinct p1.person_id) as count_value
   from  synpuf_100.person p1
 	inner join synpuf_100.payer_plan_period ppp1
 	on p1.person_id = ppp1.person_id
- group by  2 ;
---
+ group by  2)
 
-
+UNION ALL
 
 --
 -- 1412	Number of persons by payer plan period end month
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  1412 as analysis_id, CAST(concat(CAST(EXTRACT(YEAR from payer_plan_period_end_date)  AS STRING), concat(SUBSTR(concat('0', CAST(EXTRACT(MONTH from payer_plan_period_end_date)  AS STRING)),-2), '01'))  AS STRING) as stratum_1, COUNT(distinct p1.person_id) as count_value
+(select  1412 as analysis_id, CAST(concat(CAST(EXTRACT(YEAR from payer_plan_period_end_date)  AS STRING), concat(SUBSTR(concat('0', CAST(EXTRACT(MONTH from payer_plan_period_end_date)  AS STRING)),-2), '01'))  AS STRING) as stratum_1, COUNT(distinct p1.person_id) as count_value
   from  synpuf_100.person p1
 	inner join synpuf_100.payer_plan_period ppp1
 	on p1.person_id = ppp1.person_id
- group by  2 ;
---
+ group by  2)
 
+UNION ALL
 
 --
 -- 1413	Number of persons by number of payer plan periods
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  1413 as analysis_id, CAST(ppp1.num_periods  AS STRING) as stratum_1, COUNT(distinct p1.person_id) as count_value
+(select  1413 as analysis_id, CAST(ppp1.num_periods  AS STRING) as stratum_1, COUNT(distinct p1.person_id) as count_value
   from  synpuf_100.person p1
 	inner join ( select  person_id, COUNT(payer_plan_period_start_date) as num_periods   from  synpuf_100.payer_plan_period  group by  1 ) ppp1
 	on p1.person_id = ppp1.person_id
- group by  ppp1.num_periods
+ group by  ppp1.num_periods)
  ;
---
 
 --
 -- 1414	Number of persons with payer plan period before year-of-birth
@@ -3070,57 +2975,49 @@ select  1809 as analysis_id, COUNT(m.person_id) as count_value
  from  synpuf_100.measurement m
 	left join synpuf_100.person p1 on p1.person_id = m.person_id
 where p1.person_id is null
-;
---
+
+UNION ALL
 
 
 --
 -- 1810	Number of measurement records outside valid observation period
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  1810 as analysis_id, COUNT(m.person_id) as count_value
  from  synpuf_100.measurement m
 	left join synpuf_100.observation_period op on op.person_id = m.person_id
 	and m.measurement_date >= op.observation_period_start_date
 	and m.measurement_date <= op.observation_period_end_date
 where op.person_id is null
-;
---
 
-
+UNION ALL
 
 --
 -- 1812	Number of measurement records with invalid provider_id
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  1812 as analysis_id, COUNT(m.person_id) as count_value
  from  synpuf_100.measurement m
 	left join synpuf_100.provider p on p.provider_id = m.provider_id
 where m.provider_id is not null
 	and p.provider_id is null
-;
---
+
+UNION ALL
 
 --
 -- 1813	Number of observation records with invalid visit_id
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  1813 as analysis_id, COUNT(m.person_id) as count_value
  from  synpuf_100.measurement m
 	left join synpuf_100.visit_occurrence vo on m.visit_occurrence_id = vo.visit_occurrence_id
 where m.visit_occurrence_id is not null
 	and vo.visit_occurrence_id is null
-;
---
 
+UNION ALL
 
 --
 -- 1814	Number of measurement records with no value (numeric or concept)
-insert into synpuf_100.achilles_results (analysis_id, count_value)
 select  1814 as analysis_id, COUNT(m.person_id) as count_value
  from 
 	synpuf_100.measurement m
 where m.value_as_number is null
 	and m.value_as_concept_id is null
 ;
---
 
 
 --
