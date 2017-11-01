@@ -680,8 +680,8 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
 
 --
 -- 103	Distribution of age at first observation period
-INTO temp.tempresults
-   WITH rawdata  as ( select  p.person_id as person_id, min(EXTRACT(YEAR from observation_period_start_date)) - p.year_of_birth  as age_value   from  synpuf_100.person p
+insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata  as ( select  p.person_id as person_id, min(EXTRACT(YEAR from observation_period_start_date)) - p.year_of_birth  as age_value   from  synpuf_100.person p
   join synpuf_100.observation_period op on p.person_id = op.person_id
    group by  p.person_id, p.year_of_birth
  ), overallstats  as (select  cast(avg(1.0 * age_value)  as float64)  as avg_value, cast(STDDEV(age_value)  as float64)  as stdev_value, min(age_value)  as min_value, max(age_value)  as max_value, COUNT(*)  as total  from  rawdata
@@ -690,27 +690,19 @@ INTO temp.tempresults
   join agestats p on p.rn <= s.rn
    group by  s.age_value, s.total, s.rn
  )
- select  103 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then age_value end) as median_value, min(case when p.accumulated >= .10 * o.total then age_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then age_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then age_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then age_value end) as p90_value
+select  103 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then age_value end) as median_value, min(case when p.accumulated >= .10 * o.total then age_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then age_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then age_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then age_value end) as p90_value
   FROM  agestatsprior p
 cross join overallstats o
  group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
 --
 
 
 
 --
 -- 104	Distribution of age at first observation period by gender
-INTO temp.tempresults
-   WITH rawdata  as ( select  p.gender_concept_id as gender_concept_id, min(EXTRACT(YEAR from observation_period_start_date)) - p.year_of_birth  as age_value   from  synpuf_100.person p
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata  as ( select  p.gender_concept_id as gender_concept_id, min(EXTRACT(YEAR from observation_period_start_date)) - p.year_of_birth  as age_value   from  synpuf_100.person p
 	join synpuf_100.observation_period op on p.person_id = op.person_id
 	 group by  p.person_id, p.gender_concept_id, p.year_of_birth
  ), overallstats  as ( select  gender_concept_id as gender_concept_id, cast(avg(1.0 * age_value)  as float64)  as avg_value, cast(STDDEV(age_value)  as float64)  as stdev_value, min(age_value)  as min_value, max(age_value)  as max_value, COUNT(*)  as total   from  rawdata
@@ -719,25 +711,17 @@ INTO temp.tempresults
   join agestats p on s.gender_concept_id = p.gender_concept_id and p.rn <= s.rn
    group by  s.gender_concept_id, s.age_value, s.total, s.rn
  )
- select  104 as analysis_id, CAST(o.gender_concept_id  AS STRING) as stratum_1, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then age_value end) as median_value, min(case when p.accumulated >= .10 * o.total then age_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then age_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then age_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then age_value end) as p90_value
+select  104 as analysis_id, CAST(o.gender_concept_id  AS STRING) as stratum_1, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then age_value end) as median_value, min(case when p.accumulated >= .10 * o.total then age_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then age_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then age_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then age_value end) as p90_value
   FROM  agestatsprior p
 join overallstats o on p.gender_concept_id = o.gender_concept_id
  group by  o.gender_concept_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
 --
 
 --
 -- 105	Length of observation (days) of first observation period
-INTO temp.tempresults
-   WITH rawdata  as (select  count_value
+insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata  as (select  count_value
    as count_value  from  (
     select  DATE_DIFF(cast(op.observation_period_end_date as date), cast(op.observation_period_start_date as date), DAY) as count_value, row_number() over (partition by op.person_id order by op.observation_period_start_date asc) as rn
      from  synpuf_100.observation_period op
@@ -753,26 +737,18 @@ INTO temp.tempresults
   join statsview p on p.rn <= s.rn
    group by  s.count_value, s.total, s.rn
  )
- select  105 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value end) as p90_value
+select  105 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
  group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
 --
 
 
 --
 -- 106	Length of observation (days) of first observation period by gender
-INTO temp.tempresults
-   WITH rawdata as (select  p.gender_concept_id as gender_concept_id, op.count_value
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  p.gender_concept_id as gender_concept_id, op.count_value
    as count_value  from  (
     select  person_id, DATE_DIFF(cast(op.observation_period_end_date as date), cast(op.observation_period_start_date as date), DAY) as count_value, row_number() over (partition by op.person_id order by op.observation_period_start_date asc) as rn
      from  synpuf_100.observation_period op
@@ -785,27 +761,18 @@ INTO temp.tempresults
   join statsview p on s.gender_concept_id = p.gender_concept_id and p.rn <= s.rn
    group by  s.gender_concept_id, s.count_value, s.total, s.rn
  )
- select  106 as analysis_id, CAST(o.gender_concept_id  AS STRING) as gender_concept_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value end) as p90_value
+select  106 as analysis_id, CAST(o.gender_concept_id  AS STRING) as gender_concept_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.gender_concept_id = o.gender_concept_id
  group by  o.gender_concept_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, gender_concept_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 --
 -- 107	Length of observation (days) of first observation period by age decile
 
-INTO temp.tempresults
-   WITH rawdata  as (select  floor((EXTRACT(YEAR from op.observation_period_start_date) - p.year_of_birth)/10)  as age_decile, DATE_DIFF(cast(op.observation_period_end_date as date), cast(op.observation_period_start_date as date), DAY)  as count_value  from  (
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata  as (select  floor((EXTRACT(YEAR from op.observation_period_start_date) - p.year_of_birth)/10)  as age_decile, DATE_DIFF(cast(op.observation_period_end_date as date), cast(op.observation_period_start_date as date), DAY)  as count_value  from  (
     select  person_id, op.observation_period_start_date, op.observation_period_end_date, row_number() over (partition by op.person_id order by op.observation_period_start_date asc) as rn
      from  synpuf_100.observation_period op
   ) op
@@ -817,20 +784,11 @@ INTO temp.tempresults
   join statsview p on s.age_decile = p.age_decile and p.rn <= s.rn
    group by  s.age_decile, s.count_value, s.total, s.rn
  )
- select  107 as analysis_id, CAST(o.age_decile  AS STRING) as age_decile, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  107 as analysis_id, CAST(o.age_decile  AS STRING) as age_decile, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.age_decile = o.age_decile
  group by  o.age_decile, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, age_decile, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
@@ -854,23 +812,17 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
 --
 -- 109	Number of persons with continuous observation in each year
 -- Note: using temp table instead of nested query because this gives vastly improved performance in Oracle
-INTO temp.temp_dates
+insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
+WITH obs_pd_dates AS (
   SELECT distinct  EXTRACT(YEAR from observation_period_start_date) as obs_year, parse_date('%Y%m%d', concat(concat(CAST(EXTRACT(YEAR from observation_period_start_date)  AS STRING), '01'), '01')) as obs_year_start, parse_date('%Y%m%d', concat(concat(CAST(EXTRACT(YEAR from observation_period_start_date)  AS STRING), '12'), '31')) as obs_year_end
   FROM  synpuf_100.observation_period
-;
-
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  109 as analysis_id, CAST(obs_year  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
-  from  synpuf_100.observation_period,
-	temp.temp_dates
+) select  109 as analysis_id, CAST(obs_year  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
+  from  synpuf_100.observation_period, obs_pd_dates 
 where  
 		observation_period_start_date <= obs_year_start
 	and 
 		observation_period_end_date >= obs_year_end
  group by  2 ;
-
-truncate table temp.temp_dates;
-drop table temp.temp_dates;
 --
 
 
@@ -878,25 +830,18 @@ drop table temp.temp_dates;
 -- 110	Number of persons with continuous observation in each month
 -- Note: using temp table instead of nested query because this gives vastly improved performance in Oracle
 
-INTO temp.temp_dates
+insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
+WITH obs_pd_dates AS (
   SELECT distinct  EXTRACT(YEAR from observation_period_start_date)*100 + EXTRACT(MONTH from observation_period_start_date) as obs_month, parse_date('%Y%m%d', concat(concat(CAST(EXTRACT(YEAR from observation_period_start_date)  AS STRING), SUBSTR(concat('0', CAST(EXTRACT(MONTH from observation_period_start_date)  AS STRING)),-2)), '01'))
   as obs_month_start, DATE_ADD(cast(DATE_ADD(cast(parse_date('%Y%m%d', concat(concat(CAST(EXTRACT(YEAR from observation_period_start_date)  AS STRING), SUBSTR(concat('0', CAST(EXTRACT(MONTH from observation_period_start_date)  AS STRING)),-2)), '01')) as date), interval 1 MONTH) as date), interval -1 DAY) as obs_month_end
   FROM  synpuf_100.observation_period
-;
-
-
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  110 as analysis_id, CAST(obs_month  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
-  from  synpuf_100.observation_period,
-	temp.temp_dates
+) select  110 as analysis_id, CAST(obs_month  AS STRING) as stratum_1, COUNT(distinct person_id) as count_value
+  from  synpuf_100.observation_period, obs_pd_dates 
 where 
 		observation_period_start_date <= obs_month_start
 	and
 		observation_period_end_date >= obs_month_end
  group by  2 ;
-
-truncate table temp.temp_dates;
-drop table temp.temp_dates;
 --
 
 
@@ -956,49 +901,37 @@ where op1.observation_period_end_date < op1.observation_period_start_date
 --
 -- 116	Number of persons with at least one day of observation in each year by gender and age decile
 -- Note: using temp table instead of nested query because this gives vastly improved performance in Oracle
-INTO temp.temp_dates
+insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, stratum_3, count_value)
+WITH obs_pd_dates AS (
   SELECT distinct  EXTRACT(YEAR from observation_period_start_date) as obs_year 
   FROM  
   synpuf_100.observation_period
-;
-
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, stratum_3, count_value)
- select  116 as analysis_id, CAST(t1.obs_year  AS STRING) as stratum_1, CAST(p1.gender_concept_id  AS STRING) as stratum_2, CAST(floor((t1.obs_year - p1.year_of_birth)/10)  AS STRING) as stratum_3, COUNT(distinct p1.person_id) as count_value
+) select  116 as analysis_id, CAST(t1.obs_year  AS STRING) as stratum_1, CAST(p1.gender_concept_id  AS STRING) as stratum_2, CAST(floor((t1.obs_year - p1.year_of_birth)/10)  AS STRING) as stratum_3, COUNT(distinct p1.person_id) as count_value
   from  synpuf_100.person p1
 	inner join 
   synpuf_100.observation_period op1
 	on p1.person_id = op1.person_id
-	,
-	temp.temp_dates t1 
+	, obs_pd_dates  t1 
 where EXTRACT(YEAR from op1.observation_period_start_date) <= t1.obs_year
 	and EXTRACT(YEAR from op1.observation_period_end_date) >= t1.obs_year
  group by  t1.obs_year, p1.gender_concept_id, 4 ;
-
-truncate table temp.temp_dates;
-drop table temp.temp_dates;
 --
 
 
 --
 -- 117	Number of persons with at least one day of observation in each year by gender and age decile
 -- Note: using temp table instead of nested query because this gives vastly improved performance in Oracle
-INTO temp.temp_dates
+insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
+WITH obs_pd_dates AS (
   SELECT distinct  EXTRACT(YEAR from observation_period_start_date)*100 + EXTRACT(MONTH from observation_period_start_date)  as obs_month
   FROM  
   synpuf_100.observation_period
-;
-
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  117 as analysis_id, CAST(t1.obs_month  AS STRING) as stratum_1, COUNT(distinct op1.person_id) as count_value
-  from  synpuf_100.observation_period op1,
-	temp.temp_dates t1 
+) select  117 as analysis_id, CAST(t1.obs_month  AS STRING) as stratum_1, COUNT(distinct op1.person_id) as count_value
+  from  synpuf_100.observation_period op1, obs_pd_dates  t1 
 where EXTRACT(YEAR from observation_period_start_date)*100 + EXTRACT(MONTH from observation_period_start_date) <= t1.obs_month
 	and EXTRACT(YEAR from observation_period_end_date)*100 + EXTRACT(MONTH from observation_period_end_date) >= t1.obs_month
  group by  t1.obs_month
  ;
-
-truncate table temp.temp_dates;
-drop table temp.temp_dates;
 --
 
 
@@ -1065,8 +998,8 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
 --
 -- 203	Number of distinct visit occurrence concepts per person
 
-INTO temp.tempresults
-   WITH rawdata as ( select  vo1.person_id as person_id, COUNT(distinct vo1.visit_concept_id)  as count_value   from  synpuf_100.visit_occurrence vo1
+insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as ( select  vo1.person_id as person_id, COUNT(distinct vo1.visit_concept_id)  as count_value   from  synpuf_100.visit_occurrence vo1
 		 group by  vo1.person_id
  ), overallstats  as (select  cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total  from  rawdata
 ), statsview  as ( select  count_value as count_value, COUNT(*)  as total, row_number() over (order by count_value)  as rn   from  rawdata
@@ -1074,20 +1007,11 @@ INTO temp.tempresults
   join statsview p on p.rn <= s.rn
    group by  s.count_value, s.total, s.rn
  )
- select  203 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  203 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
  group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
@@ -1110,8 +1034,8 @@ on p1.person_id = vo1.person_id
 --
 -- 206	Distribution of age by visit_concept_id
 
-INTO temp.tempresults
-   WITH rawdata as (select  vo1.visit_concept_id as stratum1_id, p1.gender_concept_id as stratum2_id, vo1.visit_start_year - p1.year_of_birth  as count_value  from  synpuf_100.person p1
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  vo1.visit_concept_id as stratum1_id, p1.gender_concept_id as stratum2_id, vo1.visit_start_year - p1.year_of_birth  as count_value  from  synpuf_100.person p1
 	inner join 
   (
 		 select  person_id, visit_concept_id, min(EXTRACT(YEAR from visit_start_date)) as visit_start_year
@@ -1123,20 +1047,11 @@ INTO temp.tempresults
   join statsview p on s.stratum1_id = p.stratum1_id and s.stratum2_id = p.stratum2_id and p.rn <= s.rn
    group by  s.stratum1_id, s.stratum2_id, s.count_value, s.total, s.rn
  )
- select  206 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  206 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum1_id = o.stratum1_id and p.stratum2_id = o.stratum2_id 
  group by  o.stratum1_id, o.stratum2_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum1_id, stratum2_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
@@ -1193,28 +1108,19 @@ where vo1.care_site_id is not null
 
 --
 -- 211	Distribution of length of stay by visit_concept_id
-INTO temp.tempresults
-   WITH rawdata as (select  visit_concept_id as stratum_id, DATE_DIFF(cast(visit_end_date as date), cast(visit_start_date as date), DAY)  as count_value  from  synpuf_100.visit_occurrence
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  visit_concept_id as stratum_id, DATE_DIFF(cast(visit_end_date as date), cast(visit_start_date as date), DAY)  as count_value  from  synpuf_100.visit_occurrence
 ), overallstats  as ( select  stratum_id as stratum_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata
    group by  1 ), statsview  as ( select  stratum_id as stratum_id, count_value as count_value, COUNT(*)  as total, row_number() over (order by count_value)  as rn   from  rawdata
    group by  1, 2 ), priorstats  as ( select  s.stratum_id as stratum_id, s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
   join statsview p on s.stratum_id = p.stratum_id and p.rn <= s.rn
    group by  s.stratum_id, s.count_value, s.total, s.rn
  )
- select  211 as analysis_id, CAST(o.stratum_id  AS STRING) as stratum_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  211 as analysis_id, CAST(o.stratum_id  AS STRING) as stratum_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum_id = o.stratum_id
  group by  o.stratum_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
@@ -1328,28 +1234,19 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
 
 --
 -- 403	Number of distinct condition occurrence concepts per person
-INTO temp.tempresults
-   WITH rawdata as ( select  person_id as person_id, COUNT(distinct condition_concept_id)  as count_value   from  synpuf_100.condition_occurrence
+insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as ( select  person_id as person_id, COUNT(distinct condition_concept_id)  as count_value   from  synpuf_100.condition_occurrence
 	 group by  1 ), overallstats  as (select  cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total  from  rawdata
 ), statsview  as ( select  count_value as count_value, COUNT(*)  as total, row_number() over (order by count_value)  as rn   from  rawdata
    group by  1 ), priorstats  as ( select  s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
   join statsview p on p.rn <= s.rn
    group by  s.count_value, s.total, s.rn
  )
- select  403 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  403 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
  group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
@@ -1378,40 +1275,28 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
 
 --
 -- 406	Distribution of age by condition_concept_id
-INTO temp.rawdata_406
-  SELECT co1.condition_concept_id as subject_id, p1.gender_concept_id, (co1.condition_start_year - p1.year_of_birth) as count_value
+
+
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata_406 AS
+  (SELECT co1.condition_concept_id as subject_id, p1.gender_concept_id, (co1.condition_start_year - p1.year_of_birth) as count_value
   FROM  synpuf_100.person p1
-inner join 
+inner join
 (
 	 select  person_id, condition_concept_id, min(EXTRACT(YEAR from condition_start_date)) as condition_start_year
 	  from  synpuf_100.condition_occurrence
-	 group by  1, 2 ) co1 on p1.person_id = co1.person_id
-;
-
-INTO temp.tempresults
-   WITH overallstats  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  temp.rawdata_406
-	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, gender_concept_id order by count_value)  as rn   from  temp.rawdata_406
+	 group by  1, 2 ) co1 on p1.person_id = co1.person_id),
+ overallstats  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata_406
+	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, gender_concept_id order by count_value)  as rn   from  rawdata_406
    group by  1, 2, 3 ), priorstats  as ( select  s.stratum1_id as stratum1_id, s.stratum2_id as stratum2_id, s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
   join statsview p on s.stratum1_id = p.stratum1_id and s.stratum2_id = p.stratum2_id and p.rn <= s.rn
    group by  s.stratum1_id, s.stratum2_id, s.count_value, s.total, s.rn
  )
- select  406 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  406 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum1_id = o.stratum1_id and p.stratum2_id = o.stratum2_id 
  group by  o.stratum1_id, o.stratum2_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum1_id, stratum2_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
-truncate table temp.rawdata_406;
-drop table temp.rawdata_406;
-
 --
 
 
@@ -1553,8 +1438,8 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
 --
 -- 506	Distribution of age by condition_concept_id
 
-INTO temp.tempresults
-   WITH rawdata as (select  p1.gender_concept_id as stratum_id, d1.death_year - p1.year_of_birth  as count_value  from  synpuf_100.person p1
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  p1.gender_concept_id as stratum_id, d1.death_year - p1.year_of_birth  as count_value  from  synpuf_100.person p1
   inner join
   ( select  person_id, min(EXTRACT(YEAR from death_date)) as death_year
     from  synpuf_100.death
@@ -1566,20 +1451,11 @@ INTO temp.tempresults
   join statsview p on s.stratum_id = p.stratum_id and p.rn <= s.rn
    group by  s.stratum_id, s.count_value, s.total, s.rn
  )
- select  506 as analysis_id, CAST(o.stratum_id  AS STRING) as stratum_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  506 as analysis_id, CAST(o.stratum_id  AS STRING) as stratum_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum_id = o.stratum_id
  group by  o.stratum_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-
-drop table temp.tempresults;
 --
 
 
@@ -1633,8 +1509,8 @@ select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY) a
 
 --
 -- 512	Distribution of time from death to last drug
-INTO temp.tempresults
-   WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY)  as count_value  from  synpuf_100.death d1
+insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY)  as count_value  from  synpuf_100.death d1
   inner join
 	(
 		 select  person_id, max(drug_exposure_start_date) as max_date
@@ -1647,29 +1523,18 @@ INTO temp.tempresults
   join statsview p on p.rn <= s.rn
    group by  s.count_value, s.total, s.rn
  )
- select  512 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  512 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
  group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-
-drop table temp.tempresults;
-
-
 --
 
 
 --
 -- 513	Distribution of time from death to last visit
-INTO temp.tempresults
-   WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY)  as count_value  from  synpuf_100.death d1
+insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY)  as count_value  from  synpuf_100.death d1
 	inner join
 	(
 		 select  person_id, max(visit_start_date) as max_date
@@ -1682,28 +1547,18 @@ INTO temp.tempresults
   join statsview p on p.rn <= s.rn
    group by  s.count_value, s.total, s.rn
  )
- select  513 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  513 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
  group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-
-drop table temp.tempresults;
-
 --
 
 
 --
 -- 514	Distribution of time from death to last procedure
-INTO temp.tempresults
-   WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY)  as count_value  from  synpuf_100.death d1
+insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY)  as count_value  from  synpuf_100.death d1
 	inner join
 	(
 		 select  person_id, max(procedure_date) as max_date
@@ -1716,28 +1571,18 @@ INTO temp.tempresults
   join statsview p on p.rn <= s.rn
    group by  s.count_value, s.total, s.rn
  )
- select  514 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  514 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
  group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-
-drop table temp.tempresults;
-
 --
 
 
 --
 -- 515	Distribution of time from death to last observation
-INTO temp.tempresults
-   WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY)  as count_value  from  synpuf_100.death d1
+insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  DATE_DIFF(cast(t0.max_date as date), cast(d1.death_date as date), DAY)  as count_value  from  synpuf_100.death d1
 	inner join
 	(
 		 select  person_id, max(observation_date) as max_date
@@ -1750,21 +1595,11 @@ INTO temp.tempresults
   join statsview p on p.rn <= s.rn
    group by  s.count_value, s.total, s.rn
  )
- select  515 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  515 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
  group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
-
 --
 
 
@@ -1810,8 +1645,8 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
 
 --
 -- 603	Number of distinct procedure occurrence concepts per person
-INTO temp.tempresults
-   WITH rawdata as ( select  COUNT(distinct po.procedure_concept_id)  as count_value   from  synpuf_100.procedure_occurrence po
+insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as ( select  COUNT(distinct po.procedure_concept_id)  as count_value   from  synpuf_100.procedure_occurrence po
 	 group by  po.person_id
  ), overallstats  as (select  cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total  from  rawdata
 ), statsview  as ( select  count_value as count_value, COUNT(*)  as total, row_number() over (order by count_value)  as rn   from  rawdata
@@ -1819,21 +1654,11 @@ INTO temp.tempresults
   join statsview p on p.rn <= s.rn
    group by  s.count_value, s.total, s.rn
  )
- select  603 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  603 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
  group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
-
 --
 
 
@@ -1862,39 +1687,27 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
 
 --
 -- 606	Distribution of age by procedure_concept_id
-INTO temp.rawdata_606
-  SELECT po1.procedure_concept_id as subject_id, p1.gender_concept_id, po1.procedure_start_year - p1.year_of_birth as count_value
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata_606 AS
+(SELECT po1.procedure_concept_id as subject_id, p1.gender_concept_id, po1.procedure_start_year - p1.year_of_birth as count_value
   FROM  synpuf_100.person p1
 inner join
 (
 	 select  person_id, procedure_concept_id, min(EXTRACT(YEAR from procedure_date)) as procedure_start_year
 	  from  synpuf_100.procedure_occurrence
 	 group by  1, 2 ) po1 on p1.person_id = po1.person_id
-;
-
-INTO temp.tempresults
-   WITH overallstats  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  temp.rawdata_606
-	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, gender_concept_id order by count_value)  as rn   from  temp.rawdata_606
+),
+overallstats  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata_606
+	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, gender_concept_id order by count_value)  as rn   from  rawdata_606
    group by  1, 2, 3 ), priorstats  as ( select  s.stratum1_id as stratum1_id, s.stratum2_id as stratum2_id, s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
   join statsview p on s.stratum1_id = p.stratum1_id and s.stratum2_id = p.stratum2_id and p.rn <= s.rn
    group by  s.stratum1_id, s.stratum2_id, s.count_value, s.total, s.rn
  )
- select  606 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  606 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum1_id = o.stratum1_id and p.stratum2_id = o.stratum2_id 
  group by  o.stratum1_id, o.stratum2_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum1_id, stratum2_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-truncate table temp.rawdata_606;
-drop table temp.rawdata_606;
-
 --
 
 --
@@ -2016,8 +1829,8 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
 
 --
 -- 703	Number of distinct drug exposure concepts per person
-INTO temp.tempresults
-   WITH rawdata as (select  num_drugs  as count_value  from  (
+insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  num_drugs  as count_value  from  (
 		 select  de1.person_id, COUNT(distinct de1.drug_concept_id) as num_drugs
 		  from  synpuf_100.drug_exposure de1
 		 group by  de1.person_id
@@ -2028,20 +1841,11 @@ INTO temp.tempresults
   join statsview p on p.rn <= s.rn
    group by  s.count_value, s.total, s.rn
  )
- select  703 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  703 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
  group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
@@ -2070,41 +1874,26 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
 
 --
 -- 706	Distribution of age by drug_concept_id
-INTO temp.rawdata_706
-  SELECT de1.drug_concept_id as subject_id, p1.gender_concept_id, de1.drug_start_year - p1.year_of_birth as count_value
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata_706 AS
+(SELECT de1.drug_concept_id as subject_id, p1.gender_concept_id, de1.drug_start_year - p1.year_of_birth as count_value
   FROM  synpuf_100.person p1
 inner join
 (
 	 select  person_id, drug_concept_id, min(EXTRACT(YEAR from drug_exposure_start_date)) as drug_start_year
 	  from  synpuf_100.drug_exposure
-	 group by  1, 2 ) de1 on p1.person_id = de1.person_id
-;
-
-INTO temp.tempresults
-   WITH overallstats  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  temp.rawdata_706
-	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, gender_concept_id order by count_value)  as rn   from  temp.rawdata_706
+	 group by  1, 2 ) de1 on p1.person_id = de1.person_id),
+overallstats  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata_706
+	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, gender_concept_id order by count_value)  as rn   from  rawdata_706
    group by  1, 2, 3 ), priorstats  as ( select  s.stratum1_id as stratum1_id, s.stratum2_id as stratum2_id, s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
   join statsview p on s.stratum1_id = p.stratum1_id and s.stratum2_id = p.stratum2_id and p.rn <= s.rn
    group by  s.stratum1_id, s.stratum2_id, s.count_value, s.total, s.rn
  )
- select  706 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  706 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum1_id = o.stratum1_id and p.stratum2_id = o.stratum2_id 
  group by  o.stratum1_id, o.stratum2_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum1_id, stratum2_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-
-truncate table temp.rawdata_706;
-drop table temp.rawdata_706;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
@@ -2178,8 +1967,8 @@ where de1.visit_occurrence_id is not null
 
 --
 -- 715	Distribution of days_supply by drug_concept_id
-INTO temp.tempresults
-   WITH rawdata as (select  drug_concept_id as stratum_id, days_supply  as count_value  from  synpuf_100.drug_exposure 
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  drug_concept_id as stratum_id, days_supply  as count_value  from  synpuf_100.drug_exposure 
 	where days_supply is not null
 ), overallstats  as ( select  stratum_id as stratum_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata
 	 group by  1 ), statsview  as ( select  stratum_id as stratum_id, count_value as count_value, COUNT(*)  as total, row_number() over (order by count_value)  as rn   from  rawdata
@@ -2187,27 +1976,18 @@ INTO temp.tempresults
   join statsview p on s.stratum_id = p.stratum_id and p.rn <= s.rn
    group by  s.stratum_id, s.count_value, s.total, s.rn
  )
- select  715 as analysis_id, CAST(o.stratum_id  AS STRING) as stratum_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  715 as analysis_id, CAST(o.stratum_id  AS STRING) as stratum_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum_id = o.stratum_id
  group by  o.stratum_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
 --
 -- 716	Distribution of refills by drug_concept_id
-INTO temp.tempresults
-   WITH rawdata as (select  drug_concept_id as stratum_id, refills  as count_value  from  synpuf_100.drug_exposure 
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  drug_concept_id as stratum_id, refills  as count_value  from  synpuf_100.drug_exposure 
 	where refills is not null
 ), overallstats  as ( select  stratum_id as stratum_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata
 	 group by  1 ), statsview  as ( select  stratum_id as stratum_id, count_value as count_value, COUNT(*)  as total, row_number() over (order by count_value)  as rn   from  rawdata
@@ -2215,28 +1995,19 @@ INTO temp.tempresults
   join statsview p on s.stratum_id = p.stratum_id and p.rn <= s.rn
    group by  s.stratum_id, s.count_value, s.total, s.rn
  )
- select  716 as analysis_id, CAST(o.stratum_id  AS STRING) as stratum_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  716 as analysis_id, CAST(o.stratum_id  AS STRING) as stratum_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum_id = o.stratum_id
  group by  o.stratum_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
 
 --
 -- 717	Distribution of quantity by drug_concept_id
-INTO temp.tempresults
-   WITH rawdata as (select  drug_concept_id as stratum_id, cast(quantity  as float64)  as count_value  from  synpuf_100.drug_exposure 
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  drug_concept_id as stratum_id, cast(quantity  as float64)  as count_value  from  synpuf_100.drug_exposure 
 	where quantity is not null
 ), overallstats  as ( select  stratum_id as stratum_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata
 	 group by  1 ), statsview  as ( select  stratum_id as stratum_id, count_value as count_value, COUNT(*)  as total, row_number() over (order by count_value)  as rn   from  rawdata
@@ -2244,21 +2015,11 @@ INTO temp.tempresults
   join statsview p on s.stratum_id = p.stratum_id and p.rn <= s.rn
    group by  s.stratum_id, s.count_value, s.total, s.rn
  )
- select  717 as analysis_id, CAST(o.stratum_id  AS STRING) as stratum_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  717 as analysis_id, CAST(o.stratum_id  AS STRING) as stratum_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum_id = o.stratum_id
  group by  o.stratum_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
-
 --
 
 
@@ -2323,8 +2084,8 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
 
 --
 -- 803	Number of distinct observation occurrence concepts per person
-INTO temp.tempresults
-   WITH rawdata as (select  num_observations  as count_value  from  (
+insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  num_observations  as count_value  from  (
   	 select  o1.person_id, COUNT(distinct o1.observation_concept_id) as num_observations
   	  from  synpuf_100.observation o1
   	 group by  o1.person_id
@@ -2335,22 +2096,11 @@ INTO temp.tempresults
   join statsview p on p.rn <= s.rn
    group by  s.count_value, s.total, s.rn
  )
- select  803 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  803 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
  group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-
-drop table temp.tempresults;
-
-
 --
 
 
@@ -2379,8 +2129,9 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
 
 --
 -- 806	Distribution of age by observation_concept_id
-INTO temp.rawdata_806
-  SELECT o1.observation_concept_id as subject_id, p1.gender_concept_id, o1.observation_start_year - p1.year_of_birth as count_value
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata_806 AS
+(SELECT o1.observation_concept_id as subject_id, p1.gender_concept_id, o1.observation_start_year - p1.year_of_birth as count_value
   FROM  synpuf_100.person p1
 inner join
 (
@@ -2388,33 +2139,18 @@ inner join
 	  from  synpuf_100.observation
 	 group by  1, 2 ) o1
 on p1.person_id = o1.person_id
-;
-
-INTO temp.tempresults
-   WITH overallstats  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  temp.rawdata_806
-	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, gender_concept_id order by count_value)  as rn   from  temp.rawdata_806
+),
+overallstats  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata_806
+	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, gender_concept_id order by count_value)  as rn   from  rawdata_806
    group by  1, 2, 3 ), priorstats  as ( select  s.stratum1_id as stratum1_id, s.stratum2_id as stratum2_id, s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
   join statsview p on s.stratum1_id = p.stratum1_id and s.stratum2_id = p.stratum2_id and p.rn <= s.rn
    group by  s.stratum1_id, s.stratum2_id, s.count_value, s.total, s.rn
  )
- select  806 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  806 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum1_id = o.stratum1_id and p.stratum2_id = o.stratum2_id 
  group by  o.stratum1_id, o.stratum2_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum1_id, stratum2_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.rawdata_806;
-drop table temp.rawdata_806;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
-
 --
 
 --
@@ -2501,37 +2237,24 @@ where o1.value_as_number is null
 
 --
 -- 815  Distribution of numeric values, by observation_concept_id and unit_concept_id
-INTO temp.rawdata_815
-  SELECT observation_concept_id as subject_id, unit_concept_id, cast(value_as_number  as float64) as count_value
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata_815 AS
+(SELECT observation_concept_id as subject_id, unit_concept_id, cast(value_as_number  as float64) as count_value
   FROM  synpuf_100.observation o1
 where o1.unit_concept_id is not null
 	and o1.value_as_number is not null
-;
-
-INTO temp.tempresults
-   WITH overallstats  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  temp.rawdata_815
-	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, unit_concept_id order by count_value)  as rn   from  temp.rawdata_815
+),
+overallstats  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata_815
+	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, unit_concept_id order by count_value)  as rn   from  rawdata_815
    group by  1, 2, 3 ), priorstats  as ( select  s.stratum1_id as stratum1_id, s.stratum2_id as stratum2_id, s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
   join statsview p on s.stratum1_id = p.stratum1_id and s.stratum2_id = p.stratum2_id and p.rn <= s.rn
    group by  s.stratum1_id, s.stratum2_id, s.count_value, s.total, s.rn
  )
- select  815 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  815 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum1_id = o.stratum1_id and p.stratum2_id = o.stratum2_id 
  group by  o.stratum1_id, o.stratum2_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum1_id, stratum2_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.rawdata_815;
-drop table temp.rawdata_815;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
@@ -2610,8 +2333,8 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
 
 --
 -- 903	Number of distinct drug era concepts per person
-INTO temp.tempresults
-   WITH rawdata as ( select  COUNT(distinct de1.drug_concept_id)  as count_value   from  synpuf_100.drug_era de1
+insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as ( select  COUNT(distinct de1.drug_concept_id)  as count_value   from  synpuf_100.drug_era de1
 	 group by  de1.person_id
  ), overallstats  as (select  cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total  from  rawdata
 ), statsview  as ( select  count_value as count_value, COUNT(*)  as total, row_number() over (order by count_value)  as rn   from  rawdata
@@ -2619,21 +2342,11 @@ INTO temp.tempresults
   join statsview p on p.rn <= s.rn
    group by  s.count_value, s.total, s.rn
  )
- select  903 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  903 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
  group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
-
 --
 
 
@@ -2654,67 +2367,46 @@ on p1.person_id = de1.person_id
 
 --
 -- 906	Distribution of age by drug_concept_id
-INTO temp.rawdata_906
-  SELECT de.drug_concept_id as subject_id, p1.gender_concept_id, de.drug_start_year - p1.year_of_birth as count_value
+
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata_906 AS
+(SELECT de.drug_concept_id as subject_id, p1.gender_concept_id, de.drug_start_year - p1.year_of_birth as count_value
   FROM  synpuf_100.person p1
 inner join
 (
 	 select  person_id, drug_concept_id, min(EXTRACT(YEAR from drug_era_start_date)) as drug_start_year
 	  from  synpuf_100.drug_era
 	 group by  1, 2 ) de on p1.person_id =de.person_id
-;
-
-INTO temp.tempresults
-   WITH overallstats  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  temp.rawdata_906
-	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, gender_concept_id order by count_value)  as rn   from  temp.rawdata_906
+),
+overallstats  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata_906
+	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, gender_concept_id order by count_value)  as rn   from  rawdata_906
    group by  1, 2, 3 ), priorstats  as ( select  s.stratum1_id as stratum1_id, s.stratum2_id as stratum2_id, s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
   join statsview p on s.stratum1_id = p.stratum1_id and s.stratum2_id = p.stratum2_id and p.rn <= s.rn
    group by  s.stratum1_id, s.stratum2_id, s.count_value, s.total, s.rn
  )
- select  906 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  906 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum1_id = o.stratum1_id and p.stratum2_id = o.stratum2_id 
  group by  o.stratum1_id, o.stratum2_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum1_id, stratum2_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-
-truncate table temp.rawdata_906;
-drop table temp.rawdata_906;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
 --
 
 
 --
 -- 907	Distribution of drug era length, by drug_concept_id
-INTO temp.tempresults
-   WITH rawdata as (select  drug_concept_id as stratum1_id, DATE_DIFF(cast(drug_era_end_date as date), cast(drug_era_start_date as date), DAY)  as count_value  from  synpuf_100.drug_era de1
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  drug_concept_id as stratum1_id, DATE_DIFF(cast(drug_era_end_date as date), cast(drug_era_start_date as date), DAY)  as count_value  from  synpuf_100.drug_era de1
 ), overallstats  as ( select  stratum1_id as stratum1_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata
    group by  1 ), statsview  as ( select  stratum1_id as stratum1_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by stratum1_id order by count_value)  as rn   from  rawdata
    group by  1, 2 ), priorstats  as ( select  s.stratum1_id as stratum1_id, s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
   join statsview p on s.stratum1_id = p.stratum1_id and p.rn <= s.rn
    group by  s.stratum1_id, s.count_value, s.total, s.rn
  )
- select  907 as analysis_id, CAST(p.stratum1_id  AS STRING) as stratum_1, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  907 as analysis_id, CAST(p.stratum1_id  AS STRING) as stratum_1, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum1_id = o.stratum1_id
  group by  p.stratum1_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
@@ -2811,8 +2503,8 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
 
 --
 -- 1003	Number of distinct condition era concepts per person
-INTO temp.tempresults
-   WITH rawdata as ( select  COUNT(distinct ce1.condition_concept_id)  as count_value   from  synpuf_100.condition_era ce1
+insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as ( select  COUNT(distinct ce1.condition_concept_id)  as count_value   from  synpuf_100.condition_era ce1
 	 group by  ce1.person_id
  ), overallstats  as (select  cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total  from  rawdata
 ), statsview  as ( select  count_value as count_value, COUNT(*)  as total, row_number() over (order by count_value)  as rn   from  rawdata
@@ -2820,20 +2512,11 @@ INTO temp.tempresults
   join statsview p on p.rn <= s.rn
    group by  s.count_value, s.total, s.rn
  )
- select  1003 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  1003 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
  group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
@@ -2854,69 +2537,48 @@ on p1.person_id = ce1.person_id
 
 --
 -- 1006	Distribution of age by condition_concept_id
-INTO temp.rawdata_1006
-  SELECT ce.condition_concept_id as subject_id, p1.gender_concept_id, ce.condition_start_year - p1.year_of_birth as count_value
+
+
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata_1006 AS
+(SELECT ce.condition_concept_id as subject_id, p1.gender_concept_id, ce.condition_start_year - p1.year_of_birth as count_value
   FROM  synpuf_100.person p1
 inner join
 (
    select  person_id, condition_concept_id, min(EXTRACT(YEAR from condition_era_start_date)) as condition_start_year
     from  synpuf_100.condition_era
    group by  1, 2 ) ce on p1.person_id = ce.person_id
-;
-
-INTO temp.tempresults
-   WITH overallstats  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  temp.rawdata_1006
-	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, gender_concept_id order by count_value)  as rn   from  temp.rawdata_1006
+),
+overallstats  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata_1006
+	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, gender_concept_id order by count_value)  as rn   from  rawdata_1006
    group by  1, 2, 3 ), priorstats  as ( select  s.stratum1_id as stratum1_id, s.stratum2_id as stratum2_id, s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
   join statsview p on s.stratum1_id = p.stratum1_id and s.stratum2_id = p.stratum2_id and p.rn <= s.rn
    group by  s.stratum1_id, s.stratum2_id, s.count_value, s.total, s.rn
  )
- select  1006 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  1006 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum1_id = o.stratum1_id and p.stratum2_id = o.stratum2_id 
  group by  o.stratum1_id, o.stratum2_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum1_id, stratum2_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.rawdata_1006;
-drop table temp.rawdata_1006;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
 
 --
 -- 1007	Distribution of condition era length, by condition_concept_id
-INTO temp.tempresults
-   WITH rawdata as (select  condition_concept_id  as stratum1_id, DATE_DIFF(cast(condition_era_end_date as date), cast(condition_era_start_date as date), DAY)  as count_value  from  synpuf_100.condition_era ce1
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  condition_concept_id  as stratum1_id, DATE_DIFF(cast(condition_era_end_date as date), cast(condition_era_start_date as date), DAY)  as count_value  from  synpuf_100.condition_era ce1
 ), overallstats  as ( select  stratum1_id as stratum1_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata
    group by  1 ), statsview  as ( select  stratum1_id as stratum1_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by stratum1_id order by count_value)  as rn   from  rawdata
    group by  1, 2 ), priorstats  as ( select  s.stratum1_id as stratum1_id, s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
   join statsview p on s.stratum1_id = p.stratum1_id and p.rn <= s.rn
    group by  s.stratum1_id, s.count_value, s.total, s.rn
  )
- select  1007 as analysis_id, CAST(p.stratum1_id  AS STRING) as stratum_1, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  1007 as analysis_id, CAST(p.stratum1_id  AS STRING) as stratum_1, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum1_id = o.stratum1_id
  group by  p.stratum1_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
-
 --
 
 
@@ -3093,8 +2755,8 @@ ACHILLES Analyses on PAYOR_PLAN_PERIOD table
 
 --
 -- 1406	Length of payer plan (days) of first payer plan period by gender
-INTO temp.tempresults
-   WITH rawdata as (select  p1.gender_concept_id  as stratum1_id, DATE_DIFF(cast(ppp1.payer_plan_period_end_date as date), cast(ppp1.payer_plan_period_start_date as date), DAY)  as count_value  from  synpuf_100.person p1
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  p1.gender_concept_id  as stratum1_id, DATE_DIFF(cast(ppp1.payer_plan_period_end_date as date), cast(ppp1.payer_plan_period_start_date as date), DAY)  as count_value  from  synpuf_100.person p1
 	inner join 
 	(select  person_id, payer_plan_period_start_date, payer_plan_period_end_date, row_number() over (partition by person_id order by payer_plan_period_start_date asc) as rn1
 		  from  synpuf_100.payer_plan_period
@@ -3107,29 +2769,19 @@ INTO temp.tempresults
   join statsview p on s.stratum1_id = p.stratum1_id and p.rn <= s.rn
    group by  s.stratum1_id, s.count_value, s.total, s.rn
  )
- select  1406 as analysis_id, CAST(p.stratum1_id  AS STRING) as stratum_1, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  1406 as analysis_id, CAST(p.stratum1_id  AS STRING) as stratum_1, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum1_id = o.stratum1_id
  group by  p.stratum1_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
-
 --
 
 
 
 --
 -- 1407	Length of payer plan (days) of first payer plan period by age decile
-INTO temp.tempresults
-   WITH rawdata as (select  floor((EXTRACT(YEAR from ppp1.payer_plan_period_start_date) - p1.year_of_birth)/10)  as stratum_id, DATE_DIFF(cast(ppp1.payer_plan_period_end_date as date), cast(ppp1.payer_plan_period_start_date as date), DAY)  as count_value  from  synpuf_100.person p1
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  floor((EXTRACT(YEAR from ppp1.payer_plan_period_start_date) - p1.year_of_birth)/10)  as stratum_id, DATE_DIFF(cast(ppp1.payer_plan_period_end_date as date), cast(ppp1.payer_plan_period_start_date as date), DAY)  as count_value  from  synpuf_100.person p1
 	inner join 
 	(select  person_id, payer_plan_period_start_date, payer_plan_period_end_date, row_number() over (partition by person_id order by payer_plan_period_start_date asc) as rn1
 		  from  synpuf_100.payer_plan_period
@@ -3142,21 +2794,11 @@ INTO temp.tempresults
   join statsview p on s.stratum_id = p.stratum_id and p.rn <= s.rn
    group by  s.stratum_id, s.count_value, s.total, s.rn
  )
- select  1407 as analysis_id, CAST(o.stratum_id  AS STRING) as stratum_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  1407 as analysis_id, CAST(o.stratum_id  AS STRING) as stratum_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum_id = o.stratum_id
  group by  o.stratum_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
-
 --
 
 
@@ -3180,53 +2822,41 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
 --
 -- 1409	Number of persons with continuous payer plan in each year
 -- Note: using temp table instead of nested query because this gives vastly improved
-INTO temp.temp_dates
+insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
+WITH obs_pd_dates AS (
   SELECT distinct  EXTRACT(YEAR from payer_plan_period_start_date) as obs_year 
   FROM  
   synpuf_100.payer_plan_period
-;
-
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  1409 as analysis_id, CAST(t1.obs_year  AS STRING) as stratum_1, COUNT(distinct p1.person_id) as count_value
+) select  1409 as analysis_id, CAST(t1.obs_year  AS STRING) as stratum_1, COUNT(distinct p1.person_id) as count_value
   from  synpuf_100.person p1
 	inner join 
     synpuf_100.payer_plan_period ppp1
 	on p1.person_id = ppp1.person_id
-	,
-	temp.temp_dates t1 
+	, obs_pd_dates  t1 
 where EXTRACT(YEAR from ppp1.payer_plan_period_start_date) <= t1.obs_year
 	and EXTRACT(YEAR from ppp1.payer_plan_period_end_date) >= t1.obs_year
  group by  t1.obs_year
  ;
-
-truncate table temp.temp_dates;
-drop table temp.temp_dates;
 --
 
 
 --
 -- 1410	Number of persons with continuous payer plan in each month
 -- Note: using temp table instead of nested query because this gives vastly improved performance in Oracle
-INTO temp.temp_dates
+insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
+WITH obs_pd_dates AS (
   SELECT distinct  EXTRACT(YEAR from payer_plan_period_start_date)*100 + EXTRACT(MONTH from payer_plan_period_start_date) as obs_month, parse_date('%Y%m%d', concat(concat(CAST(EXTRACT(YEAR from payer_plan_period_start_date)  AS STRING), SUBSTR(concat('0', CAST(EXTRACT(MONTH from payer_plan_period_start_date)  AS STRING)),-2)), '01')) as obs_month_start, DATE_ADD(cast(DATE_ADD(cast(parse_date('%Y%m%d', concat(concat(CAST(EXTRACT(YEAR from payer_plan_period_start_date)  AS STRING), SUBSTR(concat('0', CAST(EXTRACT(MONTH from payer_plan_period_start_date)  AS STRING)),-2)), '01')) as date), interval 1 MONTH) as date), interval -1 DAY) as obs_month_end
   FROM  
   synpuf_100.payer_plan_period
-;
-
-insert into synpuf_100.achilles_results (analysis_id, stratum_1, count_value)
- select  1410 as analysis_id, CAST(obs_month  AS STRING) as stratum_1, COUNT(distinct p1.person_id) as count_value
+) select  1410 as analysis_id, CAST(obs_month  AS STRING) as stratum_1, COUNT(distinct p1.person_id) as count_value
   from  synpuf_100.person p1
 	inner join 
   synpuf_100.payer_plan_period ppp1
 	on p1.person_id = ppp1.person_id
-	,
-	temp.temp_dates
+	, obs_pd_dates 
 where ppp1.payer_plan_period_start_date <= obs_month_start
 	and ppp1.payer_plan_period_end_date >= obs_month_end
  group by  2 ;
-
-truncate table temp.temp_dates;
-drop table temp.temp_dates;
 --
 
 
@@ -3356,8 +2986,8 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
 
 --
 -- 1803	Number of distinct measurement occurrence concepts per person
-INTO temp.tempresults
-   WITH rawdata as (select  num_measurements  as count_value  from  (
+insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata as (select  num_measurements  as count_value  from  (
   	 select  m.person_id, COUNT(distinct m.measurement_concept_id) as num_measurements
   	  from  synpuf_100.measurement m
   	 group by  m.person_id
@@ -3368,22 +2998,11 @@ INTO temp.tempresults
   join statsview p on p.rn <= s.rn
    group by  s.count_value, s.total, s.rn
  )
- select  1803 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  1803 as analysis_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 cross join overallstats o
  group by  o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.tempresults;
-
-drop table temp.tempresults;
-
-
 --
 
 
@@ -3410,42 +3029,27 @@ insert into synpuf_100.achilles_results (analysis_id, stratum_1, stratum_2, coun
 
 --
 -- 1806	Distribution of age by measurement_concept_id
-INTO temp.rawdata_1806
-  SELECT o1.measurement_concept_id as subject_id, p1.gender_concept_id, o1.measurement_start_year - p1.year_of_birth as count_value
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata_1806 AS
+(SELECT o1.measurement_concept_id as subject_id, p1.gender_concept_id, o1.measurement_start_year - p1.year_of_birth as count_value
   FROM  synpuf_100.person p1
 inner join
 (
 	 select  person_id, measurement_concept_id, min(EXTRACT(YEAR from measurement_date)) as measurement_start_year
 	  from  synpuf_100.measurement
 	 group by  1, 2 ) o1
-on p1.person_id = o1.person_id
-;
-
-INTO temp.tempresults
-   WITH overallstats  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  temp.rawdata_1806
-	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, gender_concept_id order by count_value)  as rn   from  temp.rawdata_1806
+on p1.person_id = o1.person_id),
+overallstats  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata_1806
+	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, gender_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, gender_concept_id order by count_value)  as rn   from  rawdata_1806
    group by  1, 2, 3 ), priorstats  as ( select  s.stratum1_id as stratum1_id, s.stratum2_id as stratum2_id, s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
   join statsview p on s.stratum1_id = p.stratum1_id and s.stratum2_id = p.stratum2_id and p.rn <= s.rn
    group by  s.stratum1_id, s.stratum2_id, s.count_value, s.total, s.rn
  )
- select  1806 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  1806 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum1_id = o.stratum1_id and p.stratum2_id = o.stratum2_id 
  group by  o.stratum1_id, o.stratum2_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum1_id, stratum2_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.rawdata_1806;
-drop table temp.rawdata_1806;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
-
 --
 
 --
@@ -3521,113 +3125,71 @@ where m.value_as_number is null
 
 --
 -- 1815  Distribution of numeric values, by measurement_concept_id and unit_concept_id
-INTO temp.rawdata_1815
-  SELECT measurement_concept_id as subject_id, unit_concept_id, cast(value_as_number  as float64) as count_value
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata_1815 AS
+(SELECT measurement_concept_id as subject_id, unit_concept_id, cast(value_as_number  as float64) as count_value
   FROM  synpuf_100.measurement m
 where m.unit_concept_id is not null
-	and m.value_as_number is not null
-;
-
-INTO temp.tempresults
-   WITH overallstats  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  temp.rawdata_1815
-	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, unit_concept_id order by count_value)  as rn   from  temp.rawdata_1815
+	and m.value_as_number is not null),
+overallstats  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata_1815
+	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, unit_concept_id order by count_value)  as rn   from  rawdata_1815
    group by  1, 2, 3 ), priorstats  as ( select  s.stratum1_id as stratum1_id, s.stratum2_id as stratum2_id, s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
   join statsview p on s.stratum1_id = p.stratum1_id and s.stratum2_id = p.stratum2_id and p.rn <= s.rn
    group by  s.stratum1_id, s.stratum2_id, s.count_value, s.total, s.rn
  )
- select  1815 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  1815 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum1_id = o.stratum1_id and p.stratum2_id = o.stratum2_id 
  group by  o.stratum1_id, o.stratum2_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum1_id, stratum2_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.rawdata_1815;
-drop table temp.rawdata_1815;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
 --
 -- 1816	Distribution of low range, by measurement_concept_id and unit_concept_id
-INTO temp.rawdata_1816
-  SELECT measurement_concept_id as subject_id, unit_concept_id, cast(range_low  as float64) as count_value
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata_1816 AS
+(SELECT measurement_concept_id as subject_id, unit_concept_id, cast(range_low  as float64) as count_value
   FROM  synpuf_100.measurement m
 where m.unit_concept_id is not null
 	and m.value_as_number is not null
 	and m.range_low is not null
-	and m.range_high is not null
-;
-
-INTO temp.tempresults
-   WITH overallstats  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  temp.rawdata_1816
-	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, unit_concept_id order by count_value)  as rn   from  temp.rawdata_1816
+	and m.range_high is not null),
+overallstats  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata_1816
+	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, unit_concept_id order by count_value)  as rn   from  rawdata_1816
    group by  1, 2, 3 ), priorstats  as ( select  s.stratum1_id as stratum1_id, s.stratum2_id as stratum2_id, s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
   join statsview p on s.stratum1_id = p.stratum1_id and s.stratum2_id = p.stratum2_id and p.rn <= s.rn
    group by  s.stratum1_id, s.stratum2_id, s.count_value, s.total, s.rn
  )
- select  1816 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  1816 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum1_id = o.stratum1_id and p.stratum2_id = o.stratum2_id 
  group by  o.stratum1_id, o.stratum2_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum1_id, stratum2_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.rawdata_1816;
-drop table temp.rawdata_1816;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
 --
 -- 1817	Distribution of high range, by observation_concept_id and unit_concept_id
-INTO temp.rawdata_1817
-  SELECT measurement_concept_id as subject_id, unit_concept_id, cast(range_high  as float64) as count_value
+insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+WITH rawdata_1817 AS
+(SELECT measurement_concept_id as subject_id, unit_concept_id, cast(range_high  as float64) as count_value
   FROM  synpuf_100.measurement m
 where m.unit_concept_id is not null
 	and m.value_as_number is not null
 	and m.range_low is not null
-	and m.range_high is not null
-;
-
-INTO temp.tempresults
-   WITH overallstats  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  temp.rawdata_1817
-	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, unit_concept_id order by count_value)  as rn   from  temp.rawdata_1817
+	and m.range_high is not null),
+overallstats  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, cast(avg(1.0 * count_value)  as float64)  as avg_value, cast(STDDEV(count_value)  as float64)  as stdev_value, min(count_value)  as min_value, max(count_value)  as max_value, COUNT(*)  as total   from  rawdata_1817
+	 group by  1, 2 ), statsview  as ( select  subject_id  as stratum1_id, unit_concept_id  as stratum2_id, count_value as count_value, COUNT(*)  as total, row_number() over (partition by subject_id, unit_concept_id order by count_value)  as rn   from  rawdata_1817
    group by  1, 2, 3 ), priorstats  as ( select  s.stratum1_id as stratum1_id, s.stratum2_id as stratum2_id, s.count_value as count_value, s.total as total, sum(p.total)  as accumulated   from  statsview s
   join statsview p on s.stratum1_id = p.stratum1_id and s.stratum2_id = p.stratum2_id and p.rn <= s.rn
    group by  s.stratum1_id, s.stratum2_id, s.count_value, s.total, s.rn
  )
- select  1817 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
+select  1817 as analysis_id, CAST(o.stratum1_id  AS STRING) as stratum1_id, CAST(o.stratum2_id  AS STRING) as stratum2_id, o.total as count_value, o.min_value, o.max_value, o.avg_value, o.stdev_value, min(case when p.accumulated >= .50 * o.total then count_value else o.max_value end) as median_value, min(case when p.accumulated >= .10 * o.total then count_value else o.max_value end) as p10_value, min(case when p.accumulated >= .25 * o.total then count_value else o.max_value end) as p25_value, min(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value, min(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
   FROM  priorstats p
 join overallstats o on p.stratum1_id = o.stratum1_id and p.stratum2_id = o.stratum2_id 
  group by  o.stratum1_id, o.stratum2_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
  ;
-
-insert into synpuf_100.achilles_results_dist (analysis_id, stratum_1, stratum_2, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
-select  analysis_id, stratum1_id, stratum2_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
- from  temp.tempresults
-;
-
-truncate table temp.rawdata_1817;
-drop table temp.rawdata_1817;
-
-truncate table temp.tempresults;
-drop table temp.tempresults;
-
 --
 
 
