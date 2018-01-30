@@ -30,12 +30,12 @@
         "mode": "nullable"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "source_release_date", 
         "mode": "nullable"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "cdm_release_date", 
         "mode": "nullable"
     }, 

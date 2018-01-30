@@ -15,22 +15,22 @@
         "mode": "required"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "visit_start_date", 
         "mode": "required"
     }, 
     {
-        "type": "timestamp", 
+        "type": "string", 
         "name": "visit_start_datetime", 
         "mode": "nullable"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "visit_end_date", 
         "mode": "required"
     }, 
     {
-        "type": "timestamp", 
+        "type": "string", 
         "name": "visit_end_datetime", 
         "mode": "nullable"
     }, 

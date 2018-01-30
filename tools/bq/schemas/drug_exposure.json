@@ -15,22 +15,22 @@
         "mode": "required"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "drug_exposure_start_date", 
         "mode": "required"
     }, 
     {
-        "type": "timestamp", 
+        "type": "string", 
         "name": "drug_exposure_start_datetime", 
         "mode": "required"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "drug_exposure_end_date", 
         "mode": "nullable"
     }, 
     {
-        "type": "timestamp", 
+        "type": "string", 
         "name": "drug_exposure_end_datetime", 
         "mode": "nullable"
     }, 

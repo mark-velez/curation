@@ -4,14 +4,14 @@ import os
 def main(args):
   for file in os.listdir(args.dir):
     if file.endswith('.csv'):
-      table_name = file[0:len(file) - 4]
+      table_name = file[0:len(file) - 4].lower()
       if table_name[len(table_name) - 1].isdigit():
         last_underscore_index = table_name.rfind('_')
         table_name = table_name[0:last_underscore_index]
       schema_file = args.schema_dir + '/' + table_name + '.json'
       if os.path.exists(schema_file):
         print 'Loading %s/%s into %s:%s.%s...' % (args.dir, file, args.project, args.dataset, table_name)
-        os.system('bq --project_id=%s load --skip_leading_rows 1 %s.%s %s/%s %s'
+        os.system("bq --project_id=%s load --skip_leading_rows 1 --field_delimiter='\t' --max_bad_records=200 %s.%s %s/%s %s"
                   % (args.project, args.dataset, table_name, args.dir,
                      file, schema_file))
       else:

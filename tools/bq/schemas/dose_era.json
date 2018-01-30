@@ -25,12 +25,12 @@
         "mode": "required"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "dose_era_start_date", 
         "mode": "required"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "dose_era_end_date", 
         "mode": "required"
     }

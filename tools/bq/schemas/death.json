@@ -5,12 +5,12 @@
         "mode": "required"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "death_date", 
         "mode": "required"
     }, 
     {
-        "type": "timestamp", 
+        "type": "string", 
         "name": "death_datetime", 
         "mode": "nullable"
     }, 

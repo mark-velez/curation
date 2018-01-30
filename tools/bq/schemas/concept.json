@@ -35,12 +35,12 @@
         "mode": "required"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "valid_start_date", 
         "mode": "required"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "valid_end_date", 
         "mode": "required"
     }, 

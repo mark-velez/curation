@@ -15,12 +15,12 @@
         "mode": "required"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "observation_date", 
         "mode": "required"
     }, 
     {
-        "type": "timestamp", 
+        "type": "string", 
         "name": "observation_datetime", 
         "mode": "nullable"
     }, 

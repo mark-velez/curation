@@ -10,22 +10,22 @@
         "mode": "required"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "observation_period_start_date", 
         "mode": "required"
     }, 
     {
-        "type": "timestamp", 
+        "type": "string", 
         "name": "observation_period_start_datetime", 
         "mode": "required"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "observation_period_end_date", 
         "mode": "required"
     }, 
     {
-        "type": "timestamp", 
+        "type": "string", 
         "name": "observation_period_end_datetime", 
         "mode": "required"
     }, 

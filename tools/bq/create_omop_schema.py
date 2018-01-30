@@ -22,7 +22,7 @@ for line in sql_commands:
         if column_type.find('(') != -1: column_type = column_type.split('(')[0]
         if (column_type == "bigint"): t = "integer"
         elif (column_type == "integer"): t = "integer"
-        elif (column_type == "timestamp"): t = "timestamp"
+        elif (column_type == "timestamp"): t = "string"
         elif (column_type == "character"): t = "string"
         elif (column_type == "varchar"): t = "string"
         elif (column_type == "text"): t = "string"
@@ -30,8 +30,8 @@ for line in sql_commands:
         elif (column_type == "boolean"): t = "string"  # todo - translate "t" and "f" to something else
         elif (column_type == "double"): t = "float"
         elif (column_type == "numeric"): t = "float"
-        elif (column_type == "date"): t = "date"
-        elif (column_type == "datetime"): t = "datetime"
+        elif (column_type == "date"): t = "string"
+        elif (column_type == "datetime"): t = "string"
         else: assert False, "Unknown type: %s" % column_type
         mode = "nullable"
         if words[2].lower() == "not":

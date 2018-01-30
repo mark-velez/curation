@@ -5,12 +5,12 @@
         "mode": "required"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "cohort_start_date", 
         "mode": "required"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "cohort_end_date", 
         "mode": "required"
     }, 

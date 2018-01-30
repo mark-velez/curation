@@ -15,22 +15,22 @@
         "mode": "required"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "condition_start_date", 
         "mode": "required"
     }, 
     {
-        "type": "timestamp", 
+        "type": "string", 
         "name": "condition_start_datetime", 
         "mode": "required"
     }, 
     {
-        "type": "date", 
+        "type": "string", 
         "name": "condition_end_date", 
         "mode": "nullable"
     }, 
     {
-        "type": "timestamp", 
+        "type": "string", 
         "name": "condition_end_datetime", 
         "mode": "nullable"
     }, 
