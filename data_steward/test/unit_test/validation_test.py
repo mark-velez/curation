@@ -5,6 +5,7 @@ import mock
 from google.appengine.ext import testbed
 
 import common
+import os
 import gcs_utils
 import resources
 import test_util
@@ -244,9 +245,9 @@ class ValidationTest(unittest.TestCase):
         main.app.testing = True
         with main.app.test_client() as c:
             c.get(test_util.COPY_HPO_FILES_URL)
-            prefix = test_util.FAKE_HPO_ID + '_' + self.hpo_bucket + '/' + folder_prefix
-            expected_bucket_items = [prefix + item.split('/')[-1] for item in test_util.FIVE_PERSONS_FILES]
-            expected_bucket_items.extend([prefix + folder_prefix + item.split('/')[-1] for item in
+            prefix = test_util.FAKE_HPO_ID + '/' + self.hpo_bucket + '/' + folder_prefix
+            expected_bucket_items = [prefix + item.split(os.sep)[-1] for item in test_util.FIVE_PERSONS_FILES]
+            expected_bucket_items.extend([prefix + folder_prefix + item.split(os.sep)[-1] for item in
                                           test_util.FIVE_PERSONS_FILES])
 
             list_bucket_result = gcs_utils.list_bucket(gcs_utils.get_drc_bucket())
