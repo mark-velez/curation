@@ -26,7 +26,7 @@ CURRENT_BRANCH="${CIRCLE_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
 # Replace dashes, slashes with underscore
 CURRENT_BRANCH="${CURRENT_BRANCH//-/_}"
 CURRENT_BRANCH="${CURRENT_BRANCH//\//_}"
-BUCKET_PREFIX="${PROJECT_PREFIX}_${CURRENT_BRANCH}_${USERNAME_PREFIX}"
+BUCKET_PREFIX="${PROJECT_PREFIX}.${CURRENT_BRANCH}.${USERNAME_PREFIX}"
 
 # GCS buckets are globally unique, so we prefix with project id and username
 export DRC_BUCKET_NAME="${BUCKET_PREFIX}_drc"
