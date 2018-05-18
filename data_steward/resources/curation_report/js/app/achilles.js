@@ -432,10 +432,13 @@
 
 				d3.selectAll("#reportPerson #birthyearhist svg").remove();
 				var yearHistogram = new jnj_chart.histogram();
-				yearHistogram.render(common.mapHistogram(result.BIRTH_YEAR_HISTOGRAM), "#reportPerson #birthyearhist", 460, 195, {
+				var data = common.mapHistogram(result.BIRTH_YEAR_HISTOGRAM);
+				yearHistogram.render(data, "#reportPerson #birthyearhist", 460, 195, {
 					xFormat: d3.format('d'),
 					xLabel: 'Year',
-					yLabel: 'People'
+					yLabel: 'People',
+					xDomain: [1900, d3.max(data, function (d) { return d.x + d.dx; })],
+					ticks: 20
 				});
 			});
 		}
