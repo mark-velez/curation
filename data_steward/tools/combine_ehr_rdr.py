@@ -70,7 +70,7 @@ DIASTOLIC_TO_SYSTOLIC_CONCEPT_ID = 46233682
 SYSTOLIC_TO_DIASTOLIC_CONCEPT_ID = 46233683
 
 
-def query(q, dst_table_id, write_disposition='WRITE_TRUNCATE'):
+def query(q, dst_table_id, write_disposition='WRITE_APPEND'):
     """
     Run query and block until job is done
     :param q: SQL statement

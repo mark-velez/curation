@@ -177,6 +177,21 @@ class CombineEhrRdrTest(unittest.TestCase):
             rows = test_util.response2rows(response)
             self.assertEqual(0, len(rows), "RDR records should map to records in mapping and combined tables")
 
+    def _output_has_column_descriptions(self):
+        # Output should have column descriptions
+        output_dataset_id = bq_utils.get_ehr_rdr_dataset_id()
+        for table_name in common.CDM_TABLES:
+            table_info = bq_utils.get_table_info(table_name, output_dataset_id)
+
+            # Check table field descriptions
+            actual_fields = table_info.get('schema', dict()).get('fields', [])
+            actual_items = [(item['name'], item.get('description', None)) for item in actual_fields]
+            actual_schema = dict(actual_items)
+            expected_fields = resources.fields_for(table_name)
+            expected_items = [(item['name'], item.get('description', None)) for item in expected_fields]
+            expected_schema = dict(expected_items)
+            self.assertDictEqual(expected_schema, actual_schema)
+
     def test_create_cdm_tables(self):
         # Sanity check
         for table in common.CDM_TABLES:
@@ -194,6 +209,7 @@ class CombineEhrRdrTest(unittest.TestCase):
 
     def test_main(self):
         main()
+        self._output_has_column_descriptions()
         self._ehr_only_records_excluded()
         self._all_rdr_records_included()
 
