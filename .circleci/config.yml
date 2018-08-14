@@ -7,8 +7,8 @@ dependencies:
     # CircleCI's version of pip can be out of date; make sure it's up-to-date first.
     - pip install --upgrade pip
     # Then install requirements needed to run our tools.
-    - cd ~/curation/data_steward/ && pip install -t lib/ -r requirements.txt 
-   
+    - cd ~/curation/data_steward/ && pip install -t lib/ -r requirements.txt
+
 machine:
   pre:
     - ~/curation/data_steward/init_env.sh
