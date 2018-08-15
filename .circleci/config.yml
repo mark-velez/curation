@@ -11,7 +11,8 @@ jobs:
       command: /sbin/init
     steps:
     # - checkout
-    - run : pip install --upgrade pip
+    - run:  sudo chmod o+w /opt
+    - run: pip install --upgrade pip
       # Then install requirements needed to run our tools.
     - run: cd ~/curation/data_steward/ && pip install -t lib/ -r requirements.txt
 
