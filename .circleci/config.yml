@@ -1,23 +1,26 @@
-version: 2 # use CircleCI 2.0
-
-jobs: # a collection of steps
-  build: # runs not using Workflows must have a `build` job as entry point
-    machine: true
-      steps:
-        - run : pip install --upgrade pip
-        # Then install requirements needed to run our tools.
-        - run: cd ~/curation/data_steward/
-        - run: pip install -t lib/ -r requirements.txt
-
-      Environment:
-        - GOOGLE_APPLICATION_CREDENTIALS: "/home/ubuntu/gcloud-credentials-key.json"
-        - PYTHONPATH: "/usr/lib/google-cloud-sdk/platform/google_appengine/:~/curation/data_steward:~/curation/data_steward/lib"
+version: 2
+jobs:
+  build:
+    working_directory: ~/curation/data_steward/
+    shell: /bin/bash --login
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS: "/home/ubuntu/gcloud-credentials-key.json"
+      - PYTHONPATH: "/usr/lib/google-cloud-sdk/platform/google_appengine/:~/curation/data_steward:~/curation/data_steward/lib"
+    docker:
+    - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
+      command: /sbin/init
     steps:
-      -  run: ~/curation/data_steward/init_env.sh
-      -  run: echo "deb http://packages.cloud.google.com/apt cloud-sdk-$(lsb_release -c -s) main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-      -  run: curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-      -  run: sudo apt-get update && sudo apt-get install google-cloud-sdk
-      -  run: sudo apt-get install google-cloud-sdk-app-engine-python
-      -  run: chmod 700 ./curation/data_steward/ci/activate_creds.sh && chmod 700 ./curation/data_steward/ci/setup.sh
-      -  run: ./curation/data_steward/ci/activate_creds.sh ~/gcloud-credentials-key.json
-      -  run: ./curation/data_steward/ci/setup.sh
+    - checkout
+    - run : pip install --upgrade pip
+      # Then install requirements needed to run our tools.
+    - run: cd ~/curation/data_steward/
+    - run: pip install -t lib/ -r requirements.txt
+
+    -  run: ~/curation/data_steward/init_env.sh
+    -  run: echo "deb http://packages.cloud.google.com/apt cloud-sdk-$(lsb_release -c -s) main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+    -  run: curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+    -  run: sudo apt-get update && sudo apt-get install google-cloud-sdk
+    -  run: sudo apt-get install google-cloud-sdk-app-engine-python
+    -  run: chmod 700 ./curation/data_steward/ci/activate_creds.sh && chmod 700 ./curation/data_steward/ci/setup.sh
+    -  run: ./curation/data_steward/ci/activate_creds.sh ~/gcloud-credentials-key.json
+    -  run: ./curation/data_steward/ci/setup.sh
