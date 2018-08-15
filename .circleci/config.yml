@@ -3,6 +3,9 @@ jobs:
   build:
     working_directory: ~/curation/data_steward/
     shell: /bin/bash --login
+    - run: pip install --upgrade pip
+      # Then install requirements needed to run our tools.
+    - run: cd ~/curation/data_steward/ && pip install -t lib/ -r requirements.txt
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS: "/home/ubuntu/gcloud-credentials-key.json"
       - PYTHONPATH: "/usr/lib/google-cloud-sdk/platform/google_appengine/:~/curation/data_steward:~/curation/data_steward/lib"
@@ -10,11 +13,9 @@ jobs:
     - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
       command: /sbin/init
     steps:
-    # - checkout
+    - checkout
     - run:  sudo chmod o+w /opt
-    - run: pip install --upgrade pip
-      # Then install requirements needed to run our tools.
-    - run: cd ~/curation/data_steward/ && pip install -t lib/ -r requirements.txt
+
 
     - run: ~/curation/data_steward/init_env.sh
     - run: echo "deb http://packages.cloud.google.com/apt cloud-sdk-$(lsb_release -c -s) main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
