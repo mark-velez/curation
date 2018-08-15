@@ -3,14 +3,14 @@ version: 2 # use CircleCI 2.0
 jobs: # a collection of steps
   build: # runs not using Workflows must have a `build` job as entry point
     working_directory: ~/curation/data_steward/ # directory where steps will run
-    docker: # run the steps with Docker
-      - image: circleci/2.7.15-node-browsers # ...with this image as the primary container; this is where all `steps` will run
-        Environment:
-          GOOGLE_APPLICATION_CREDENTIALS: "/home/ubuntu/gcloud-credentials-key.json"
-          PYTHONPATH: "/usr/lib/google-cloud-sdk/platform/google_appengine/:~/curation/data_steward:~/curation/data_steward/lib"
+    Machine: true
+      steps:
+        - run: pip install -t lib/ -r requirements.txt
+        - run: ~/curation/data_steward/init_env.sh
+      Environment:
+        - GOOGLE_APPLICATION_CREDENTIALS: "/home/ubuntu/gcloud-credentials-key.json"
+        - PYTHONPATH: "/usr/lib/google-cloud-sdk/platform/google_appengine/:~/curation/data_steward:~/curation/data_steward/lib"
     steps:
-      -  run: pip install -t lib/ -r requirements.txt
-      -  run: ~/curation/data_steward/init_env.sh
       -  run: echo "deb http://packages.cloud.google.com/apt cloud-sdk-$(lsb_release -c -s) main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
       -  run: curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
       -  run: sudo apt-get update && sudo apt-get install google-cloud-sdk
