@@ -1,7 +1,7 @@
 version: 2
 jobs:
   build:
-    working_directory: ~/curation/data_steward/
+    working_directory: ~/ksdkalluri/curation/
     shell: /bin/bash --login
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS: "/home/ubuntu/gcloud-credentials-key.json"
