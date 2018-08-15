@@ -4,7 +4,7 @@ jobs: # a collection of steps
   build: # runs not using Workflows must have a `build` job as entry point
     working_directory: ~/curation/data_steward/ # directory where steps will run
     docker: # run the steps with Docker
-      - image: circleci/python:2.7.12 # ...with this image as the primary container; this is where all `steps` will run
+      - image: circleci/2.7.15-node-browsers # ...with this image as the primary container; this is where all `steps` will run
         Environment:
           GOOGLE_APPLICATION_CREDENTIALS: "/home/ubuntu/gcloud-credentials-key.json"
           PYTHONPATH: "/usr/lib/google-cloud-sdk/platform/google_appengine/:~/curation/data_steward:~/curation/data_steward/lib"
