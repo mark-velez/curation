@@ -1,5 +1,12 @@
-dependencies:
-  override:
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:2.7.12
+      - ~/curation/data_steward/init_env.sh
+      - cat $HOME/.circlerc
+  dependencies:
+    override:
     # chmod to address a Circle "bug", since gcloud lives at /opt
     # and wants to make a .staging directory (as a sibling!)
     # when upgrading or installing new components.
@@ -8,11 +15,6 @@ dependencies:
     - pip install --upgrade pip
     # Then install requirements needed to run our tools.
     - cd ~/curation/data_steward/ && pip install -t lib/ -r requirements.txt
-
-machine:
-  pre:
-    - ~/curation/data_steward/init_env.sh
-    - cat $HOME/.circlerc
   environment:
     GOOGLE_APPLICATION_CREDENTIALS: "/home/ubuntu/gcloud-credentials-key.json"
     PYTHONPATH: "/usr/lib/google-cloud-sdk/platform/google_appengine/:~/curation/data_steward:~/curation/data_steward/lib"
@@ -25,6 +27,7 @@ machine:
     - chmod 700 ./curation/data_steward/ci/activate_creds.sh && chmod 700 ./curation/data_steward/ci/setup.sh
     - ./curation/data_steward/ci/activate_creds.sh ~/gcloud-credentials-key.json
     - ./curation/data_steward/ci/setup.sh
+
 
 test:
   override:
