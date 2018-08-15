@@ -15,7 +15,6 @@ jobs:
         command: |
           sudo chmod o+w /opt
           pip install --upgrade pip
-          #cd ~/curation/data_steward/ &&
           pip install -t /lib -r requirements.txt
         # Then install requirements needed to run our tools.
     #- run: cd ~/curation/data_steward/
