@@ -1,7 +1,7 @@
 version: 2
 jobs:
   build:
-    working_directory: ~/curation/data_steward/
+    working_directory: ~/curation/data_steward
     shell: /bin/bash --login
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS: "/home/ubuntu/gcloud-credentials-key.json"
@@ -11,16 +11,9 @@ jobs:
       command: /sbin/init
     steps:
     - checkout
-    - run:
-        command: |
-          sudo chmod o+w /opt
-          pip install --upgrade pip
-          pip install -t /lib -r requirements.txt
-        # Then install requirements needed to run our tools.
-    #- run: cd ~/curation/data_steward/
-    #- run: ls -la
-    #- run: pip install -r requirements.txt
-
+    - run: sudo chmod o+w /opt
+    - run: pip install --upgrade pip
+    - run: pip install -t lib -r requirements.txt
     - run: ~/curation/data_steward/init_env.sh
     - run: echo "deb http://packages.cloud.google.com/apt cloud-sdk-$(lsb_release -c -s) main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
     - run: curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
