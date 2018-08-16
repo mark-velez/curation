@@ -13,7 +13,7 @@ jobs:
     - checkout
     - run: sudo chmod o+w /opt
     - run: pip install --upgrade pip
-    - run: pip install -t lib -r requirements.txt
+    - run: cd ~/curation/data_steward && pip install -t lib -r requirements.txt
     - run: ~/curation/data_steward/init_env.sh
     - run: echo "deb http://packages.cloud.google.com/apt cloud-sdk-$(lsb_release -c -s) main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
     - run: curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
