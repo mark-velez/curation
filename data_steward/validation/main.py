@@ -518,6 +518,61 @@ def union_ehr():
     return 'merge-and-achilles-done'
 
 
+def long_request(sleep_seconds):
+    """
+    Returns back in specified number of seconds
+
+    :param sleep_seconds: Number of seconds to sleep before returning
+    :return:
+    """
+    import time
+
+    start = datetime.datetime.now()
+    logging.info('long_request started at ' + str(start))
+    logging.info('long_request sleep_seconds: %s' % sleep_seconds)
+    time.sleep(sleep_seconds)
+    end = datetime.datetime.now()
+    logging.info('long_request ended at ' + str(end))
+    result = dict(start=str(start),
+                  end=str(end),
+                  sleep_seconds=sleep_seconds)
+    return json.dumps(result, indent=4, sort_keys=True)
+
+
+def fetch_long_request(sleep_seconds):
+    """
+    Fetch a URL that returns back in specified number of seconds
+
+    :param sleep_seconds: Number of seconds for the URL to return back
+    :return:
+    """
+    import httplib2
+    from google.appengine.api import urlfetch
+
+    url = 'https://aou-res-curation-test.appspot.com/data_steward/v1/LongRequest/%s' % sleep_seconds
+    h = httplib2.Http()
+    deadline_seconds = urlfetch.get_default_fetch_deadline()
+
+    logging.info('fetch_long_request sleep_seconds: %s' % str(sleep_seconds))
+    logging.info('default_fetch_deadline: %s' % str(deadline_seconds))
+    logging.info('Fetching ' + url)
+    (resp_headers, content) = h.request(url, "GET")
+    logging.info('Response: %s' % content)
+    return content
+
+
+def fetch_long_request2(sleep_seconds):
+    """
+    Increase fetch deadline then fetch a URL that returns back in specified number of seconds
+
+    :param sleep_seconds: Number of seconds for the URL to return back
+    :return:
+    """
+    from google.appengine.api import urlfetch
+    urlfetch.set_default_fetch_deadline(sleep_seconds + 10)
+    return fetch_long_request(sleep_seconds)
+
+
 app.add_url_rule(
     PREFIX + 'ValidateAllHpoFiles',
     endpoint='validate_all_hpos',
@@ -547,4 +602,22 @@ app.add_url_rule(
     PREFIX + 'UnionEHR',
     endpoint='union_ehr',
     view_func=union_ehr,
+    methods=['GET'])
+
+app.add_url_rule(
+    PREFIX + 'LongRequest/<int:sleep_seconds>',
+    endpoint='long_request',
+    view_func=long_request,
+    methods=['GET'])
+
+app.add_url_rule(
+    PREFIX + 'FetchLongRequest/<int:sleep_seconds>',
+    endpoint='fetch_long_request',
+    view_func=fetch_long_request,
+    methods=['GET'])
+
+app.add_url_rule(
+    PREFIX + 'FetchLongRequest2/<int:sleep_seconds>',
+    endpoint='fetch_long_request2',
+    view_func=fetch_long_request2,
     methods=['GET'])
