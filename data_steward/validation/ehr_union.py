@@ -188,7 +188,7 @@ def mapping_query(table_name, hpo_ids, dataset_id=None, project_id=None):
     SELECT 
         src_table_id,
         src_{table_name}_id,
-        {table_name}_id
+        {table_name}_id,
         SUBSTR(src_table_id, 1, STRPOS(src_table_id, "_{table_name}")-1) AS src_hpo_id
     FROM all_{table_name}
     '''.format(union_all_query=union_all_query, table_name=table_name)

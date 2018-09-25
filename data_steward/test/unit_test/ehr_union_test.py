@@ -211,30 +211,34 @@ class EhrUnionTest(unittest.TestCase):
             hpo_table = self._create_hpo_table(hpo_id, table, dataset_id)
             created_tables.append(hpo_table)
         query = ehr_union.mapping_query(table, hpo_ids, dataset_id, project_id)
+        dataset_id=os.environ.get('BIGQUERY_DATASET_ID')
+        app_id = os.getenv('APPLICATION_ID')
         #testing the query string
         expected_query='''
             WITH all_measurement AS (
       
                 (SELECT 'chs_measurement' AS src_table_id,
-                  measurement_id AS src_measurement_id
-                  FROM `aou-res-curation-test.cukarthik_ehr.chs_measurement`)
+                  measurement_id AS src_measurement_id,
+                  ROW_NUMBER() over() + 100000000 as measurement_id
+                  FROM `{app_id}.{dataset_id}.chs_measurement`)
                 
 
         UNION ALL
         
 
                 (SELECT 'pitt_measurement' AS src_table_id,
-                  measurement_id AS src_measurement_id
-                  FROM `aou-res-curation-test.cukarthik_ehr.pitt_measurement`)
+                  measurement_id AS src_measurement_id,
+                  ROW_NUMBER() over() + 200000000 as measurement_id
+                  FROM `{app_id}.{dataset_id}.pitt_measurement`)
                 
     )
     SELECT 
         src_table_id,
         src_measurement_id,
-        ROW_NUMBER() OVER () AS measurement_id,
+        measurement_id,
         SUBSTR(src_table_id, 1, STRPOS(src_table_id, "_measurement")-1) AS src_hpo_id
     FROM all_measurement
-    '''
+    '''.format(dataset_id=dataset_id, app_id=app_id)
         self.assertEqual(expected_query.strip(), query.strip(), "Mapping query for \n {q} \n to is not as expected".format(q=query))
 
 
