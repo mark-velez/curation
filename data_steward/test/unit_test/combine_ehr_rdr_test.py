@@ -198,7 +198,7 @@ class CombineEhrRdrTest(unittest.TestCase):
     (
         SELECT
           '{rdr_dataset_id}'  AS src_dataset_id, 
-          {domain_table}_id AS src_{domain_table}_id
+          {domain_table}_id AS src_{domain_table}_id,
           NULL as src_hpo_id 
         FROM {rdr_dataset_id}.{domain_table}
 
