@@ -35,33 +35,41 @@ class CombineEhrRdrTest(unittest.TestCase):
         rdr_dataset_id = bq_utils.get_rdr_dataset_id()
         test_util.delete_all_tables(ehr_dataset_id)
         test_util.delete_all_tables(rdr_dataset_id)
-        cls.load_dataset_from_files(ehr_dataset_id, test_util.NYC_FIVE_PERSONS_PATH)
+        cls.load_dataset_from_files(ehr_dataset_id, test_util.NYC_FIVE_PERSONS_PATH, True)
         cls.load_dataset_from_files(rdr_dataset_id, test_util.RDR_PATH)
 
     @staticmethod
-    def load_dataset_from_files(dataset_id, path):
-        app_id = bq_utils.app_identity.get_application_id()
+    def load_dataset_from_files(dataset_id, path, mappings=False):
         bucket = gcs_utils.get_hpo_bucket(test_util.FAKE_HPO_ID)
         test_util.empty_bucket(bucket)
         job_ids = []
         for table in common.CDM_TABLES:
-            filename = table + '.csv'
-            schema = os.path.join(resources.fields_path, table + '.json')
-            f = os.path.join(path, filename)
-            if os.path.exists(os.path.join(path, filename)):
-                with open(f, 'r') as fp:
-                    gcs_utils.upload_object(bucket, filename, fp)
-            else:
-                test_util.write_cloud_str(bucket, filename, '\n')
-            gcs_path = 'gs://{bucket}/{filename}'.format(bucket=bucket, filename=filename)
-            load_results = bq_utils.load_csv(schema, gcs_path, app_id, dataset_id, table, allow_jagged_rows=True)
-            load_job_id = load_results['jobReference']['jobId']
-            job_ids.append(load_job_id)
+            job_ids.append(CombineEhrRdrTest._upload_file_to_bucket(bucket, dataset_id, path, table))
+            #hard-coding list of tables for testing purposes
+            if mappings and table in ['visit_occurrence', 'condition_occurrence', 'procedure_occurrence', 'measurement', 'drug_exposure', 'observation']:
+                mapping_table = '_mapping_{table}'.format(table=table)
+                job_ids.append(CombineEhrRdrTest._upload_file_to_bucket(bucket, dataset_id, path, mapping_table))
         incomplete_jobs = bq_utils.wait_on_jobs(job_ids)
         if len(incomplete_jobs) > 0:
             message = "Job id(s) %s failed to complete" % incomplete_jobs
             raise RuntimeError(message)
         test_util.empty_bucket(bucket)
+
+    @staticmethod
+    def _upload_file_to_bucket(bucket, dataset_id, path, table):
+        app_id = bq_utils.app_identity.get_application_id()
+        filename = table + '.csv'
+        schema = os.path.join(resources.fields_path, table + '.json')
+        f = os.path.join(path, filename)
+        if os.path.exists(os.path.join(path, filename)):
+            with open(f, 'r') as fp:
+                gcs_utils.upload_object(bucket, filename, fp)
+        else:
+            test_util.write_cloud_str(bucket, filename, '\n')
+        gcs_path = 'gs://{bucket}/{filename}'.format(bucket=bucket, filename=filename)
+        load_results = bq_utils.load_csv(schema, gcs_path, app_id, dataset_id, table, allow_jagged_rows=True)
+        load_job_id = load_results['jobReference']['jobId']
+        return load_job_id
 
     def setUp(self):
         super(CombineEhrRdrTest, self).setUp()
@@ -207,7 +215,7 @@ class CombineEhrRdrTest(unittest.TestCase):
         SELECT
           '{ehr_dataset_id}'  AS src_dataset_id, 
           {domain_table}_id AS src_{domain_table}_id,
-          SUBSTR(v.src_table_id, 1, STRPOS(v.src_table_id, "_{domain_table}")-1) AS src_hpo_id
+          v.src_hpo_id AS src_hpo_id
         FROM {ehr_dataset_id}.{domain_table} t
         JOIN {ehr_dataset_id}._mapping_{domain_table}  v on t.{domain_table}_id = v.{domain_table}_id 
         WHERE EXISTS

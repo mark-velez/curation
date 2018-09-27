@@ -298,8 +298,8 @@ def mapping_query(domain_table):
 
         SELECT
           '{ehr_dataset_id}'  AS src_dataset_id, 
-          {domain_table}_id AS src_{domain_table}_id,
-          SUBSTR(v.src_table_id, 1, STRPOS(v.src_table_id, "_{domain_table}")-1) AS src_hpo_id
+          t.{domain_table}_id AS src_{domain_table}_id,
+          v.src_hpo_id AS src_hpo_id
         FROM {ehr_dataset_id}.{domain_table} t
         JOIN {ehr_dataset_id}._mapping_{domain_table}  v on t.{domain_table}_id = v.{domain_table}_id 
         WHERE EXISTS
