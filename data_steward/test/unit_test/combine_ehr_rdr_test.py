@@ -214,7 +214,7 @@ class CombineEhrRdrTest(unittest.TestCase):
 
         SELECT
           '{ehr_dataset_id}'  AS src_dataset_id, 
-          {domain_table}_id AS src_{domain_table}_id,
+          t.{domain_table}_id AS src_{domain_table}_id,
           v.src_hpo_id AS src_hpo_id
         FROM {ehr_dataset_id}.{domain_table} t
         JOIN {ehr_dataset_id}._mapping_{domain_table}  v on t.{domain_table}_id = v.{domain_table}_id 
