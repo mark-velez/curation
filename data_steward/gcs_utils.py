@@ -14,6 +14,7 @@ MIMETYPES = {'json': 'application/json',
              'ttf': 'application/font-sfnt',
              'eot': 'application/vnd.ms-fontobject'}
 GCS_DEFAULT_RETRY_COUNT = 5
+service = googleapiclient.discovery.build('storage', 'v1')
 
 
 def get_drc_bucket():
@@ -44,17 +45,12 @@ def hpo_gcs_path(hpo_id):
     return '/%s/' % bucket_name
 
 
-def create_service():
-    return googleapiclient.discovery.build('storage', 'v1')
-
-
 def list_bucket_dir(gcs_path):
     """
     Get metadata for each object within the given GCS path
     :param gcs_path: full GCS path (e.g. `/<bucket_name>/path/to/person.csv`)
     :return: list of metadata objects
     """
-    service = create_service()
     gcs_path_parts = gcs_path.split('/')
     if len(gcs_path_parts) < 2:
         raise ValueError('%s is not a valid GCS path' % gcs_path)
@@ -92,7 +88,6 @@ def list_bucket(bucket):
     :param bucket: name of the bucket
     :return: list of metadata objects
     """
-    service = create_service()
     req = service.objects().list(bucket=bucket)
     all_objects = []
     while req:
@@ -109,7 +104,6 @@ def get_object(bucket, name):
     :param name: name of the file to download
     :return: file contents (as text)
     """
-    service = create_service()
     req = service.objects().get_media(bucket=bucket, object=name)
     out_file = BytesIO()
     downloader = googleapiclient.http.MediaIoBaseDownload(out_file, req)
@@ -129,7 +123,6 @@ def upload_object(bucket, name, fp):
     :param fp: a file-like object containing file contents
     :return: metadata about the uploaded file
     """
-    service = create_service()
     body = {'name': name}
     ext = name.split('.')[-1]
     if ext in MIMETYPES:
@@ -148,7 +141,6 @@ def delete_object(bucket, name):
     :param name: name of the file in the bucket
     :return: empty string
     """
-    service = create_service()
     req = service.objects().delete(bucket=bucket, object=name)
     resp = req.execute(num_retries=GCS_DEFAULT_RETRY_COUNT)
     # TODO return something useful
@@ -160,11 +152,9 @@ def copy_object(source_bucket, source_object_id, destination_bucket, destination
     :returns: response of request
 
     """
-    service = create_service()
     req = service.objects().copy(sourceBucket=source_bucket,
                                  sourceObject=source_object_id,
                                  destinationBucket=destination_bucket,
                                  destinationObject=destination_object_id,
-                                 body = dict())
+                                 body=dict())
     return req.execute(num_retries=GCS_DEFAULT_RETRY_COUNT)
-

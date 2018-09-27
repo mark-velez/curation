@@ -15,6 +15,7 @@ import logging
 BQ_DEFAULT_RETRY_COUNT = 10
 # Maximum results returned by list_tables (API has a low default value)
 LIST_TABLES_MAX_RESULTS = 2000
+bq_service = build('bigquery', 'v2')
 
 
 class InvalidOperationError(RuntimeError):
@@ -52,10 +53,6 @@ def get_ehr_rdr_dataset_id():
     return os.environ.get('EHR_RDR_DATASET_ID')
 
 
-def create_service():
-    return build('bigquery', 'v2')
-
-
 def get_table_id(hpo_id, table_name):
     """
     Get the bigquery table id associated with an HPOs CDM table
@@ -78,7 +75,6 @@ def get_table_info(table_id, dataset_id=None, project_id=None):
     :param project_id: associated project ID (default app ID by default)
     :return:
     """
-    bq_service = create_service()
     if project_id is None:
         project_id = app_identity.get_application_id()
     if dataset_id is None:
@@ -98,7 +94,6 @@ def load_csv(schema_path, gcs_object_path, project_id, dataset_id, table_id, wri
     :param table_id:
     :return:
     """
-    bq_service = create_service()
 
     fields = json.load(open(schema_path, 'r'))
     load = {'sourceUris': [gcs_object_path],
@@ -154,7 +149,6 @@ def delete_table(table_id, dataset_id=None):
     app_id = app_identity.get_application_id()
     if dataset_id is None:
         dataset_id = get_dataset_id()
-    bq_service = create_service()
     delete_job = bq_service.tables().delete(projectId=app_id, datasetId=dataset_id, tableId=table_id)
     logging.debug('Deleting {dataset_id}.{table_id}'.format(dataset_id=dataset_id, table_id=table_id))
     return delete_job.execute(num_retries=BQ_DEFAULT_RETRY_COUNT)
@@ -169,7 +163,6 @@ def table_exists(table_id, dataset_id=None):
     app_id = app_identity.get_application_id()
     if dataset_id is None:
         dataset_id = get_dataset_id()
-    bq_service = create_service()
     try:
         bq_service.tables().get(
             projectId=app_id,
@@ -215,7 +208,6 @@ def get_job_details(job_id):
     :param job_id: id of the job to get (i.e. `jobReference.jobId` in response body of insert request)
     :returns: the job resource (for details see https://goo.gl/bUE49Z)
     """
-    bq_service = create_service()
     app_id = app_identity.get_application_id()
     return bq_service.jobs().get(projectId=app_id, jobId=job_id).execute(num_retries=BQ_DEFAULT_RETRY_COUNT)
 
@@ -253,7 +245,6 @@ def merge_tables(source_dataset_id,
         }
     }
 
-    bq_service = create_service()
     insert_result = bq_service.jobs().insert(projectId=app_id,
                                              body=job_body).execute(num_retries=BQ_DEFAULT_RETRY_COUNT)
     job_id = insert_result['jobReference']['jobId']
@@ -287,7 +278,6 @@ def query(q, use_legacy_sql=False, destination_table_id=None, retry_count=BQ_DEF
     :return: if destination_table_id is supplied then job info, otherwise job query response
              (see https://goo.gl/AoGY6P and https://goo.gl/bQ7o2t)
     """
-    bq_service = create_service()
     app_id = app_identity.get_application_id()
 
     if destination_table_id:
@@ -342,7 +332,6 @@ def create_table(table_id, fields, drop_existing=False, dataset_id=None):
             delete_table(table_id, dataset_id)
         else:
             raise InvalidOperationError('Attempt to create an existing table with id `%s`.' % table_id)
-    bq_service = create_service()
     app_id = app_identity.get_application_id()
     insert_body = {
         "tableReference": {
@@ -391,7 +380,6 @@ def list_tables(dataset_id=None, max_results=LIST_TABLES_MAX_RESULTS):
       for table in result['tables']:
           print table['id']
     """
-    bq_service = create_service()
     app_id = app_identity.get_application_id()
     if dataset_id is None:
         dataset_id = get_dataset_id()
@@ -407,12 +395,11 @@ def list_tables(dataset_id=None, max_results=LIST_TABLES_MAX_RESULTS):
 
 def list_dataset_contents(dataset_id):
     project_id = app_identity.get_application_id()
-    service = create_service()
-    req = service.tables().list(projectId=project_id, datasetId=dataset_id)
+    req = bq_service.tables().list(projectId=project_id, datasetId=dataset_id)
     all_tables = []
     while req:
         resp = req.execute()
         items = [item['id'].split('.')[-1] for item in resp.get('tables', [])]
         all_tables.extend(items or [])
-        req = service.tables().list_next(req, resp)
+        req = bq_service.tables().list_next(req, resp)
     return all_tables
