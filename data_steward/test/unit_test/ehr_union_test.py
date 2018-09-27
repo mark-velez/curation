@@ -111,6 +111,22 @@ class EhrUnionTest(unittest.TestCase):
         input_tables_after = set(self._dataset_tables(self.input_dataset_id))
         self.assertSetEqual(input_tables_before, input_tables_after)
 
+        # mapping tables
+        tables_to_map = ehr_union.tables_to_map()
+        for table_to_map in tables_to_map:
+            mapping_table = ehr_union.mapping_table_for(table_to_map)
+            expected_fields = {'src_table_id', 'src_%s_id' % table_to_map, '%s_id' % table_to_map, 'src_hpo_id'}
+            mapping_table_info = bq_utils.get_table_info(mapping_table, dataset_id=self.output_dataset_id)
+            mapping_table_fields = mapping_table_info.get('schema', dict()).get('fields', [])
+            actual_fields = set([f['name'] for f in mapping_table_fields])
+            message = 'Table %s has fields %s when %s expected' % (mapping_table, actual_fields, expected_fields)
+            self.assertSetEqual(expected_fields, actual_fields, message)
+            result_table = ehr_union.output_table_for(table_to_map)
+            expected_num_rows = len(self.expected_tables[result_table])
+            actual_num_rows = int(mapping_table_info.get('numRows', -1))
+            message = 'Table %s has %s rows when %s expected' % (mapping_table, actual_num_rows, expected_num_rows)
+            self.assertEqual(expected_num_rows, actual_num_rows, message)
+
         # check for each output table
         for table_name in common.CDM_TABLES:
             # output table exists and row count is sum of those submitted by hpos

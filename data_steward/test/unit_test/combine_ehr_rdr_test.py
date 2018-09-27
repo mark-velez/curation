@@ -255,6 +255,23 @@ class CombineEhrRdrTest(unittest.TestCase):
             self.assertIsNone(combined_person_id,
                               'EHR-only person_id `{ehr_person_id}` found in combined when it should be excluded')
 
+    def _mapping_table_checks(self):
+        """
+        Check mapping tables exist, have correct schema, have expected number of records
+        :return:
+        """
+        expected_mapping_tables = set(mapping_table_for(t) for t in DOMAIN_TABLES)
+        q = '''
+            SELECT * 
+            FROM {ehr_rdr_dataset_id}.__TABLES_SUMMARY__
+            '''.format(ehr_rdr_dataset_id=self.combined_dataset_id)
+        response = bq_utils.query(q)
+        rows = test_util.response2rows(response)
+        actual_mapping_tables = set(t['table_id'] for t in rows)
+        self.assertSetEqual(expected_mapping_tables, actual_mapping_tables)
+
+
+
     def _all_rdr_records_included(self):
         """
         All rdr records are included whether or not there is corresponding ehr record
@@ -314,6 +331,7 @@ class CombineEhrRdrTest(unittest.TestCase):
 
     def test_main(self):
         main()
+        self._mapping_table_checks()
         self._ehr_only_records_excluded()
         self._all_rdr_records_included()
         self._check_ehr_person_observation()
