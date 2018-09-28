@@ -263,6 +263,39 @@ class CombineEhrRdrTest(unittest.TestCase):
             self.assertIsNone(combined_person_id,
                               'EHR-only person_id `{ehr_person_id}` found in combined when it should be excluded')
 
+    def _mapping_table_checks(self):
+        """
+        Check mapping tables exist, have correct schema, have expected number of records
+        """
+        where = '''
+                WHERE EXISTS
+                   (SELECT 1 FROM {ehr_rdr_dataset_id}.{ehr_consent_table_id} c 
+                    WHERE t.person_id = c.person_id)
+                '''.format(ehr_rdr_dataset_id=self.combined_dataset_id, ehr_consent_table_id=EHR_CONSENT_TABLE_ID)
+        ehr_counts = test_util.get_table_counts(self.ehr_dataset_id, DOMAIN_TABLES, where)
+        rdr_counts = test_util.get_table_counts(self.rdr_dataset_id)
+        combined_counts = test_util.get_table_counts(self.combined_dataset_id)
+        output_tables = combined_counts.keys()
+        expected_counts = dict()
+        expected_diffs = ['observation']
+
+        for t in DOMAIN_TABLES:
+            expected_mapping_table = mapping_table_for(t)
+            self.assertIn(expected_mapping_table, output_tables)
+            expected_fields = resources.fields_for(expected_mapping_table)
+            actual_table_info = bq_utils.get_table_info(expected_mapping_table, self.combined_dataset_id)
+            actual_fields = actual_table_info.get('schema', dict()).get('fields', [])
+            actual_fields_norm = map(test_util.normalize_field_payload, actual_fields)
+            self.assertItemsEqual(expected_fields, actual_fields_norm)
+
+            # Count should be sum of EHR and RDR
+            # (except for tables like observation where extra records are created for demographics)
+            actual_count = combined_counts[expected_mapping_table]
+            expected_count = actual_count if t in expected_diffs else ehr_counts[t] + rdr_counts[t]
+            expected_counts[expected_mapping_table] = expected_count
+        self.maxDiff = None
+        self.assertDictContainsSubset(expected=expected_counts, actual=combined_counts)
+
     def _all_rdr_records_included(self):
         """
         All rdr records are included whether or not there is corresponding ehr record
@@ -322,6 +355,7 @@ class CombineEhrRdrTest(unittest.TestCase):
 
     def test_main(self):
         main()
+        self._mapping_table_checks()
         self._ehr_only_records_excluded()
         self._all_rdr_records_included()
         self._check_ehr_person_observation()
