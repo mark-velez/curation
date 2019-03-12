@@ -2,6 +2,8 @@ import unittest
 import json
 import os
 from google.appengine.ext import testbed
+import moz_sql_parser
+import dpath
 
 import common
 import resources
@@ -12,6 +14,17 @@ from validation import ehr_union
 
 PITT_HPO_ID = 'pitt'
 CHS_HPO_ID = 'chs'
+SUBQUERY_FAIL_MSG = '''
+Test {expr} in {table} subquery 
+ Expected: {expected}
+ Actual: {actual}
+
+{subquery}
+'''
+
+
+def first_or_none(l):
+    return next(iter(l or []), None)
 
 
 class EhrUnionTest(unittest.TestCase):
@@ -31,6 +44,13 @@ class EhrUnionTest(unittest.TestCase):
         self._empty_hpo_buckets()
         test_util.delete_all_tables(self.input_dataset_id)
         test_util.delete_all_tables(self.output_dataset_id)
+
+        # Collect all primary key fields in CDM tables
+        mapped_fields = []
+        for table in ehr_union.tables_to_map():
+            mapped_field = table + '_id'
+            mapped_fields.append(mapped_field)
+        self.mapped_fields = mapped_fields
 
     def _empty_hpo_buckets(self):
         for hpo_id in self.hpo_ids:
@@ -257,20 +277,67 @@ class EhrUnionTest(unittest.TestCase):
     '''.format(dataset_id=dataset_id, app_id=app_id)
         self.assertEqual(expected_query.strip(), query.strip(), "Mapping query for \n {q} \n to is not as expected".format(q=query))
 
+    def get_table_hpo_subquery_error(self, table, dataset_in, dataset_out):
+        subquery = ehr_union.table_hpo_subquery(table, CHS_HPO_ID, dataset_in, dataset_out)
+        stmt = moz_sql_parser.parse(subquery)
 
-    def _test_table_hpo_subquery(self):
-        # person is a simple select, no ids should be mapped
-        person = ehr_union.table_hpo_subquery(
-            'person', hpo_id=CHS_HPO_ID, input_dataset_id='input', output_dataset_id='output')
+        # Sanity check it is a select statement
+        if 'select' not in stmt:
+            return SUBQUERY_FAIL_MSG.format(expr='query type',
+                                            table=table,
+                                            expected='select',
+                                            actual=str(stmt),
+                                            subquery=subquery)
 
-        # _mapping_visit_occurrence(src_table_id, src_visit_occurrence_id, visit_occurrence_id)
-        # visit_occurrence_id should be mapped
-        visit_occurrence = ehr_union.table_hpo_subquery(
-            'visit_occurrence', hpo_id=CHS_HPO_ID, input_dataset_id='input', output_dataset_id='output')
+        # Input table should be first in FROM expression
+        actual_from = first_or_none(dpath.util.values(stmt, 'from/0/value') or dpath.util.values(stmt, 'from'))
+        expected_from = dataset_in + '.' + bq_utils.get_table_id(CHS_HPO_ID, table)
+        if expected_from != actual_from:
+            return SUBQUERY_FAIL_MSG.format(expr='first object in FROM',
+                                            table=table,
+                                            expected=expected_from,
+                                            actual=actual_from,
+                                            subquery=subquery)
 
-        # visit_occurrence_id and condition_occurrence_id should be mapped
-        condition_occurrence = ehr_union.table_hpo_subquery(
-            'condition_occurrence', hpo_id=CHS_HPO_ID, input_dataset_id='input', output_dataset_id='output')
+        # Ensure all key fields (primary or foreign) yield joins with their associated mapping tables
+        # Note: ordering of joins in the subquery is assumed to be consistent with field order in the json file
+        fields = resources.fields_for(table)
+        id_field = table + '_id'
+        key_ind = 0
+        for field in fields:
+            if field['name'] in self.mapped_fields:
+                key_ind += 1
+                if field['name'] == id_field:
+                    # Primary key, mapping table associated with this one should be INNER joined
+                    expr = 'inner join on primary key'
+                    actual_join = first_or_none(dpath.util.values(stmt, 'from/%s/join/value' % key_ind))
+                    expected_join = dataset_out + '.' + ehr_union.mapping_table_for(table)
+                else:
+                    # Foreign key, mapping table associated with the referenced table should be LEFT joined
+                    expr = 'left join on foreign key'
+                    actual_join = first_or_none(dpath.util.values(stmt, 'from/%s/left join/value' % key_ind))
+                    joined_table = field['name'].replace('_id', '')
+                    expected_join = dataset_out + '.' + ehr_union.mapping_table_for(joined_table)
+                if expected_join != actual_join:
+                    return SUBQUERY_FAIL_MSG.format(expr=expr,
+                                                    table=table,
+                                                    expected=expected_join,
+                                                    actual=actual_join,
+                                                    subquery=subquery)
+
+    def test_hpo_subquery(self):
+        input_dataset_id = 'input'
+        output_dataset_id = 'output'
+        subquery_fails = []
+
+        # Key fields should be populated using associated mapping tables
+        for table in common.CDM_TABLES:
+            subquery_fail = self.get_table_hpo_subquery_error(table, input_dataset_id, output_dataset_id)
+            if subquery_fail is not None:
+                subquery_fails.append(subquery_fail)
+
+        if len(subquery_fails) > 0:
+            self.fail('\n\n'.join(subquery_fails))
 
     def _test_table_union_query(self):
         measurement = ehr_union.table_union_query(
