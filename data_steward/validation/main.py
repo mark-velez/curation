@@ -23,9 +23,6 @@ import validation.export as export
 from common import ACHILLES_EXPORT_PREFIX_STRING, ACHILLES_EXPORT_DATASOURCES_JSON
 from validation import hpo_report
 
-UNKNOWN_FILE = 'Unknown file'
-BQ_LOAD_RETRY_COUNT = 7
-
 PREFIX = '/data_steward/v1/'
 app = Flask(__name__)
 
