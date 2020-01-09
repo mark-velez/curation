@@ -9,8 +9,9 @@ import mock
 from test.unit_test import test_util
 from common import DELIMITER, LINE_TERMINATOR
 from resources import AOU_VOCAB_CONCEPT_CSV_PATH
-from vocabulary import _transform_csv, format_date_str, get_aou_general_vocabulary_row, \
-    append_vocabulary, append_concepts, get_aou_custom_vocabulary_row
+from vocabulary import (_transform_csv, format_date_str, get_aou_vocabulary_row, append_vocabulary, append_concepts,
+                        AOU_GEN_ID, AOU_CUSTOM_ID, _vocab_id_match)
+
 from io import open
 
 
@@ -61,13 +62,21 @@ class VocabularyTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             format_date_str('201901234')
 
+    def test_vocab_id_match(self):
+        s1 = 'dummy,text,,dummy,text'
+        self.assertIsNone(_vocab_id_match(s1))
+        s2 = 'dummy,text,' + AOU_GEN_ID + ',dummy,text'
+        self.assertEqual(_vocab_id_match(s2), AOU_GEN_ID)
+        s3 = 'dummy,text,' + AOU_CUSTOM_ID + ',dummy,text'
+        self.assertEqual(_vocab_id_match(s3), AOU_CUSTOM_ID)
+
     def test_append_vocabulary(self):
         in_path = test_util.TEST_VOCABULARY_VOCABULARY_CSV
         out_dir = tempfile.mkdtemp()
         out_path = os.path.join(out_dir, 'VOCABULARY_1.CSV')
         out_path_2 = os.path.join(out_dir, 'VOCABULARY_2.CSV')
-        aou_general_row = get_aou_general_vocabulary_row()
-        aou_custom_row = get_aou_custom_vocabulary_row()
+        aou_general_row = get_aou_vocabulary_row(AOU_GEN_ID)
+        aou_custom_row = get_aou_vocabulary_row(AOU_CUSTOM_ID)
 
         try:
             append_vocabulary(in_path, out_path)
