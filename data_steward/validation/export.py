@@ -60,8 +60,6 @@ def export_from_path(p, datasource_id):
     :return: `dict` structured for report render
     """
     result = dict()
-    if not is_hpo_id(datasource_id):
-        datasource_id = None
     for f in list_files_only(p):
         name = f[0:-4].upper()
         abs_path = os.path.join(p, f)
