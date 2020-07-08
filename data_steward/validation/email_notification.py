@@ -1,14 +1,15 @@
 # Python imports
 
+import base64
+import logging
 # Third party imports
 import os
-import logging
-import base64
 from io import BytesIO
 
-from google.cloud import bigquery
 import google.auth
 import mandrill
+import pandas
+from google.cloud import bigquery
 from jinja2 import Template
 from matplotlib import image as mpimg
 
@@ -46,7 +47,7 @@ def _get_mandrill_api_key():
     return os.environ[consts.MANDRILL_API_KEY]
 
 
-def get_hpo_contact_info(project_id):
+def get_hpo_contact_info(project_id: str) -> pandas.DataFrame:
     """
     Fetch email of points of contact for hpo sites
     :param project_id: identifies the project containing the contact lookup table
@@ -63,7 +64,6 @@ def get_hpo_contact_info(project_id):
             f"{project} does not match {project_id}. "
             f"Please verify that the project_id is set correctly in env vars")
     client = bigquery.Client(credentials=credentials, project=project)
-
     contact_list_query = CONTACT_QUERY_TMPL.render(
         project=project_id,
         dataset=bq_consts.LOOKUP_TABLES_DATASET_ID,

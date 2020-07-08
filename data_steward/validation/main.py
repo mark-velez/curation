@@ -16,6 +16,7 @@ from io import StringIO, open
 # Third party imports
 import dateutil
 from flask import Flask
+import googleclouddebugger
 from googleapiclient.errors import HttpError
 
 # Project imports
@@ -38,7 +39,10 @@ from validation.metrics import completeness, required_labs
 from validation import email_notification as en
 from validation.participants import identity_match as matching
 
+googleclouddebugger.enable(breakpoint_enable_canary=False)
+
 app = Flask(__name__)
+app.debug = True
 
 # register application error handlers
 app.register_blueprint(errors_blueprint)
@@ -997,6 +1001,13 @@ def write_sites_pii_validation_files():
     return consts.SITES_VALIDATION_REPORT_SUCCESS
 
 
+@api_util.auth_required_cron
+def test_scopes():
+    project = bq_utils.app_identity.get_application_id()
+    df = en.get_hpo_contact_info(project)
+    return df.to_csv()
+
+
 @app.before_first_request
 def set_up_logging():
     initialize_logging()
@@ -1045,6 +1056,11 @@ app.add_url_rule(consts.PREFIX + consts.PARTICIPANT_VALIDATION,
 app.add_url_rule(consts.PREFIX + 'RetractPids',
                  endpoint='run_retraction_cron',
                  view_func=run_retraction_cron,
+                 methods=['GET'])
+
+app.add_url_rule(consts.PREFIX + 'TestScopes',
+                 endpoint='test_scopes',
+                 view_func=test_scopes,
                  methods=['GET'])
 
 app.before_request(
