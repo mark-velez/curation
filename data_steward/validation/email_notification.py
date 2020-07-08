@@ -59,6 +59,7 @@ def get_hpo_contact_info(project_id: str) -> pandas.DataFrame:
         "https://www.googleapis.com/auth/cloud-platform",
         "https://www.googleapis.com/auth/bigquery",
     ])
+    LOGGER.debug(f'Scopes in get_hpo_contact_info credentials are: {credentials.scopes}')
     if project != project_id:
         raise ValueError(
             f"{project} does not match {project_id}. "
