@@ -169,7 +169,6 @@ class PpiBranching(BaseCleaningRule):
         self.lookup_table = bigquery.TableReference(sandbox_dataset_ref, RULES_LOOKUP_TABLE_ID)
         self.backup_table = bigquery.TableReference(sandbox_dataset_ref,
                                                     OBSERVATION_BACKUP_TABLE_ID)
-        self.rules_dataframe = self._load_dataframe()
 
     def _load_dataframe(self) -> pandas.DataFrame:
         """
@@ -185,7 +184,7 @@ class PpiBranching(BaseCleaningRule):
         return all_rules_df
 
     def load_rules_lookup(self,
-                          client: bigquery.client.Client) -> bigquery.job.LoadJob:
+                          client: bigquery.Client) -> bigquery.job.LoadJob:
         """
         Load rule csv files to a BigQuery table
 
@@ -194,8 +193,9 @@ class PpiBranching(BaseCleaningRule):
         :return: the completed LoadJob object
         """
         job_config = bigquery.LoadJobConfig()
+        rules_dataframe = self._load_dataframe()
         job_config.write_disposition = bigquery.WriteDisposition.WRITE_TRUNCATE
-        job = client.load_table_from_dataframe(self.rules_dataframe,
+        job = client.load_table_from_dataframe(rules_dataframe,
                                                destination=self.lookup_table,
                                                job_config=job_config)
         return job.result()
