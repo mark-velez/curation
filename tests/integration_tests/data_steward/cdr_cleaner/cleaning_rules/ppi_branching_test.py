@@ -1,6 +1,5 @@
 import datetime
 import time
-import unittest
 from typing import Any, Optional
 
 from google.cloud import bigquery
@@ -10,7 +9,10 @@ import app_identity
 import bq_utils
 import resources
 import sandbox
+from cdr_cleaner.cleaning_rules.ppi_branching import PpiBranching, OBSERVATION_BACKUP_TABLE_ID
 from data_steward.cdr_cleaner.cleaning_rules import ppi_branching
+from tests.integration_tests.data_steward.cdr_cleaner.cleaning_rules.bigquery_tests_base import \
+    BaseTest
 from utils import bq
 
 TEST_DATA_FIELDS = (
@@ -79,45 +81,50 @@ class Observation(object):
                 self.__setattr__(field_name, default_val)
 
 
-class PPiBranchingTest(unittest.TestCase):
+def _fq_table_name(table: Table):
+    return f'{table.project}.{table.dataset_id}.{table.table_id}'
+
+
+class PPiBranchingTest(BaseTest.CleaningRulesTestBase):
     @classmethod
     def setUpClass(cls):
         print('**************************************************************')
         print(cls.__name__)
         print('**************************************************************')
+
+        super().initialize_class_vars()
         project_id = app_identity.get_application_id()
-        client = bq.get_client(project_id)
         dataset_id = bq_utils.get_rdr_dataset_id()
-        dataset = DatasetReference(project_id, dataset_id)
         sandbox_dataset_id = sandbox.get_sandbox_dataset_id(dataset_id)
-        sandbox_dataset = DatasetReference(project_id, sandbox_dataset_id)
-        cls.dataset = client.create_dataset(dataset, exists_ok=True)
-        cls.sandbox_dataset = client.create_dataset(sandbox_dataset, exists_ok=True)
-        cls.client = client
-        cls.dataset = dataset
+        rule = PpiBranching(project_id, dataset_id, sandbox_dataset_id)
+        cls.dataset_id = dataset_id
+        cls.project_id = project_id
+        cls.query_class = rule
+        cls.fq_sandbox_table_names = [_fq_table_name(table)
+                                      for table in (rule.lookup_table, rule.backup_table)]
+        cls.fq_table_names = [_fq_table_name(rule.observation_table)]
+        super().setUpClass()
 
     def setUp(self):
         self.data = [Observation(**dict(zip(TEST_DATA_FIELDS, row))).__dict__
                      for row in TEST_DATA_ROWS]
-        table_ref = TableReference(self.dataset, 'observation')
-        self.observation_table = Table(table_ref, Observation.SCHEMA)
-        self.lookup_table = TableReference(self.sandbox_dataset,
-                                           ppi_branching.RULES_LOOKUP_TABLE_ID)
-        self.backup_table = TableReference(self.sandbox_dataset,
-                                           ppi_branching.OBSERVATION_BACKUP_TABLE_ID)
+        job_config = bigquery.LoadJobConfig()
+        job_config.write_disposition = bigquery.WriteDisposition.WRITE_APPEND
+        job_config.schema = Observation.SCHEMA
+        self.client.load_table_from_json(self.data,
+                                         destination=f'{self.dataset_id}.{ppi_branching.OBSERVATION}',
+                                         job_config=job_config).result()
 
     def load_observation_table(self):
         """
         Drop existing and create observation table loaded with test data
         :return:
         """
-        self.client.delete_table(self.observation_table, not_found_ok=True)
-        self.observation_table = self.client.create_table(self.observation_table)
         job_config = bigquery.LoadJobConfig()
         job_config.write_disposition = bigquery.WriteDisposition.WRITE_APPEND
         job_config.schema = Observation.SCHEMA
         self.client.load_table_from_json(self.data,
-                                         destination=self.observation_table,
+                                         destination=f'{self.dataset_id}.{ppi_branching.OBSERVATION}',
                                          job_config=job_config).result()
 
     def _query(self, q: str) -> bigquery.table.RowIterator:
@@ -134,6 +141,22 @@ class PPiBranchingTest(unittest.TestCase):
         self.assertEqual(job.state, 'DONE')
         self.assertIsNone(job.error_result)
         self.assertIsNone(job.errors)
+
+    def test(self):
+        loaded_ids = [_id for (_id, *_) in TEST_DATA_ROWS]
+        sandboxed_ids = [_id for (_id, *_) in TEST_DATA_DROP]
+        cleaned_values = [(_id,) for (_id, *_) in TEST_DATA_KEEP]
+        tables_and_counts = [{
+            'name': self.query_class.observation_table.table_id,
+            'fq_table_name': _fq_table_name(self.query_class.observation_table),
+            'fq_sandbox_table_name': _fq_table_name(self.query_class.backup_table),
+            'fields': ['observation_id'],
+            'loaded_ids': loaded_ids,
+            'sandboxed_ids': sandboxed_ids,
+            'cleaned_values': cleaned_values
+        }]
+
+        self.default_test(tables_and_counts)
 
     def test_rule(self):
         rules_df = ppi_branching._load_dataframe(resources.PPI_BRANCHING_RULE_PATHS)
@@ -195,11 +218,3 @@ class PPiBranchingTest(unittest.TestCase):
         self.assertJobSuccess(drop_job)
         actual_result = {tuple(row[f] for f in TEST_DATA_FIELDS) for row in self._query(q)}
         self.assertSetEqual(actual_result, TEST_DATA_KEEP)
-
-    def tearDown(self) -> None:
-        """
-        Delete any existing observation, backup and lookup tables
-        """
-        self.client.delete_table(self.observation_table, not_found_ok=True)
-        self.client.delete_table(self.backup_table, not_found_ok=True)
-        self.client.delete_table(self.lookup_table, not_found_ok=True)
