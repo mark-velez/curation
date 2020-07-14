@@ -1,15 +1,14 @@
 import datetime
 import time
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from google.cloud import bigquery
-from google.cloud.bigquery import DatasetReference, Table, TableReference
+from google.cloud.bigquery import Table
 
 import app_identity
 import bq_utils
-import resources
 import sandbox
-from cdr_cleaner.cleaning_rules.ppi_branching import PpiBranching, OBSERVATION_BACKUP_TABLE_ID
+from cdr_cleaner.cleaning_rules.ppi_branching import PpiBranching
 from data_steward.cdr_cleaner.cleaning_rules import ppi_branching
 from tests.integration_tests.data_steward.cdr_cleaner.cleaning_rules.bigquery_tests_base import \
     BaseTest
@@ -81,7 +80,13 @@ class Observation(object):
                 self.__setattr__(field_name, default_val)
 
 
-def _fq_table_name(table: Table):
+def _fq_table_name(table: Table) -> str:
+    """
+    Get fully qualified name of a table
+
+    :param table: the table to get the name of
+    :return: table name in the form `project.dataset.table_id`
+    """
     return f'{table.project}.{table.dataset_id}.{table.table_id}'
 
 
@@ -127,94 +132,79 @@ class PPiBranchingTest(BaseTest.CleaningRulesTestBase):
                                          destination=f'{self.dataset_id}.{ppi_branching.OBSERVATION}',
                                          job_config=job_config).result()
 
-    def _query(self, q: str) -> bigquery.table.RowIterator:
+    def _query(self, q: str) -> (bigquery.table.RowIterator, bigquery.QueryJob):
         """
         Execute query and return results
 
         :param q: the query
-        :return: results as an iterable collection of Row objects
+        :return: (rows, job) where results is an iterable of row objects
+                 and job is the completed job
         """
         query_job = self.client.query(q)
-        return query_job.result()
+        row_iter = query_job.result()
+        return row_iter, query_job
 
-    def assertJobSuccess(self, job):
+    def assert_job_success(self, job: Union[bigquery.QueryJob, bigquery.LoadJob]):
+        """
+        Check that job is done and does not have errors
+
+        :param job: the job to check
+        :return: None
+        """
         self.assertEqual(job.state, 'DONE')
         self.assertIsNone(job.error_result)
         self.assertIsNone(job.errors)
 
     def test(self):
-        loaded_ids = [_id for (_id, *_) in TEST_DATA_ROWS]
-        sandboxed_ids = [_id for (_id, *_) in TEST_DATA_DROP]
-        cleaned_values = [(_id,) for (_id, *_) in TEST_DATA_KEEP]
-        tables_and_counts = [{
-            'name': self.query_class.observation_table.table_id,
-            'fq_table_name': _fq_table_name(self.query_class.observation_table),
-            'fq_sandbox_table_name': _fq_table_name(self.query_class.backup_table),
-            'fields': ['observation_id'],
-            'loaded_ids': loaded_ids,
-            'sandboxed_ids': sandboxed_ids,
-            'cleaned_values': cleaned_values
-        }]
-
-        self.default_test(tables_and_counts)
-
-    def test_rule(self):
-        rules_df = ppi_branching._load_dataframe(resources.PPI_BRANCHING_RULE_PATHS)
+        rule = self.query_class  # var just to reduce line lengths
 
         # create lookup table
-        lookup_job = ppi_branching.load_rules_lookup(client=self.client,
-                                                     destination_table=self.lookup_table,
-                                                     rule_paths=resources.PPI_BRANCHING_RULE_PATHS)
+        rules_df = rule.create_rules_dataframe()
+        lookup_job = rule.load_rules_lookup(client=self.client)
         self.assertIsInstance(lookup_job, bigquery.LoadJob)
-        self.assertJobSuccess(lookup_job)
-        q = f'SELECT * FROM {self.lookup_table.dataset_id}.{self.lookup_table.table_id}'
-        row_iter = self._query(q)
+        self.assert_job_success(lookup_job)
+        q = f'SELECT * FROM {rule.lookup_table.dataset_id}.{rule.lookup_table.table_id}'
+        row_iter, _ = self._query(q)
         self.assertEqual(row_iter.total_rows, len(rules_df.index))
-        # existing lookup gets overwritten
-        lookup_job = ppi_branching.load_rules_lookup(client=self.client,
-                                                     destination_table=self.lookup_table,
-                                                     rule_paths=resources.PPI_BRANCHING_RULE_PATHS)
-        self.assertJobSuccess(lookup_job)
-        row_iter = self._query(q)
+        # if lookup exists it gets overwritten successfully
+        lookup_job = rule.load_rules_lookup(client=self.client)
+        self.assert_job_success(lookup_job)
+        row_iter, _ = self._query(q)
         self.assertEqual(row_iter.total_rows, len(rules_df.index))
 
         # subsequent tests rely on observation test data
         self.load_observation_table()
 
         # backup rows
-        backup_job = ppi_branching.backup_rows(src_table=self.observation_table,
-                                               dst_table=self.backup_table,
-                                               lookup_table=self.lookup_table,
-                                               client=self.client)
+        backup_rows_ddl = rule.get_backup_rows_ddl()
+        _, backup_job = self._query(backup_rows_ddl)
         self.assertIsInstance(backup_job, bigquery.QueryJob)
-        self.assertJobSuccess(backup_job)
-        q = f'''SELECT * FROM {self.backup_table.dataset_id}.{self.backup_table.table_id} 
+        self.assert_job_success(backup_job)
+        q = f'''SELECT * FROM {_fq_table_name(rule.backup_table)} 
                 ORDER BY observation_id'''
-        actual_result = {tuple(row[f] for f in TEST_DATA_FIELDS) for row in self._query(q)}
+        row_iter, _ = self._query(q)
+        actual_result = {tuple(row[f] for f in TEST_DATA_FIELDS) for row in row_iter}
         self.assertSetEqual(TEST_DATA_DROP, actual_result)
         # existing backup gets overwritten
-        backup_job = ppi_branching.backup_rows(src_table=self.observation_table,
-                                               dst_table=self.backup_table,
-                                               lookup_table=self.lookup_table,
-                                               client=self.client)
-        self.assertJobSuccess(backup_job)
-        actual_result = {tuple(row[f] for f in TEST_DATA_FIELDS) for row in self._query(q)}
+        _, backup_job = self._query(backup_rows_ddl)
+        self.assert_job_success(backup_job)
+        row_iter, _ = self._query(q)
+        actual_result = {tuple(row[f] for f in TEST_DATA_FIELDS) for row in row_iter}
         self.assertSetEqual(TEST_DATA_DROP, actual_result)
 
         # drop rows
-        drop_job = ppi_branching.drop_rows(self.client,
-                                           src_table=self.observation_table,
-                                           backup_table=self.backup_table)
+        drop_rows_ddl = rule.get_drop_rows_ddl()
+        _, drop_job = self._query(drop_rows_ddl)
         self.assertIsInstance(drop_job, bigquery.QueryJob)
-        self.assertJobSuccess(drop_job)
-        q = f'''SELECT * FROM {self.observation_table.dataset_id}.{self.observation_table.table_id} 
+        self.assert_job_success(drop_job)
+        q = f'''SELECT * FROM {_fq_table_name(rule.observation_table)} 
                 ORDER BY observation_id'''
-        actual_result = {tuple(row[f] for f in TEST_DATA_FIELDS) for row in self._query(q)}
+        row_iter, _ = self._query(q)
+        actual_result = {tuple(row[f] for f in TEST_DATA_FIELDS) for row in row_iter}
         self.assertSetEqual(actual_result, TEST_DATA_KEEP)
         # repeated drop job has no effect
-        drop_job = ppi_branching.drop_rows(self.client,
-                                           src_table=self.observation_table,
-                                           backup_table=self.backup_table)
-        self.assertJobSuccess(drop_job)
-        actual_result = {tuple(row[f] for f in TEST_DATA_FIELDS) for row in self._query(q)}
+        _, drop_job = self._query(drop_rows_ddl)
+        self.assert_job_success(drop_job)
+        row_iter, _ = self._query(q)
+        actual_result = {tuple(row[f] for f in TEST_DATA_FIELDS) for row in row_iter}
         self.assertSetEqual(actual_result, TEST_DATA_KEEP)
