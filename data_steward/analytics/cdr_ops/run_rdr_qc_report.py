@@ -16,7 +16,7 @@ def generate_notebook(python_file):
     """Create a template notebook from a .py file using jupytext"""
     LOGGER.info("Generating notebook from .py file...")
     subprocess.run(
-        ["jupytext", python_file, f"-o={NOTEBOOK_TEMPLATE_NAME}", "--set-kernel", "-"]
+        ["jupytext", python_file, f"-o={NOTEBOOK_TEMPLATE_NAME}"]
     )
     return True
 
