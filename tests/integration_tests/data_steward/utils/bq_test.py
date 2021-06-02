@@ -2,6 +2,8 @@
 import json
 import unittest
 import os
+import random
+import string
 
 # Third party imports
 from google.cloud import bigquery
@@ -21,10 +23,15 @@ class BQTest(unittest.TestCase):
         print(cls.__name__)
         print('**************************************************************')
 
+    @staticmethod
+    def get_random_dataset_id():
+        suffix = ''.join(random.choice(string.ascii_letters) for i in range(16))
+        return f'{__name__}_{suffix}'
+
     def setUp(self):
         self.project_id = app_identity.get_application_id()
-        self.dataset_id = os.environ.get('UNIONED_DATASET_ID')
-        self.description = 'Unioned test dataset'
+        self.dataset_id = self.get_random_dataset_id()
+        self.description = f'Dataset for {__name__} integration tests'
         self.label_or_tag = {'test': 'bq'}
         self.client = bq.get_client(self.project_id)
         # Remove dataset if it already exists

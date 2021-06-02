@@ -25,6 +25,7 @@ from mock import MagicMock, patch, mock_open
 
 # Project imports
 import resources
+import tools.load_vocab
 from tests.bq_test_helpers import mock_query_result, list_item_from_table_id
 from utils import bq
 from resources import CDM_TABLES
@@ -281,5 +282,5 @@ class BqTest(TestCase):
             )
         ]
         with patch('utils.bq.open', mock_open(read_data=mock_json)):
-            actual = bq.read_dataset_access_entries('fake_json_path.json')
+            actual = tools.load_vocab.dataset_properties_from_file('fake_json_path.json')
         self.assertSequenceEqual(expected, actual)

@@ -3,7 +3,6 @@ A utility to standardize use of the BigQuery python client library.
 """
 # Python Imports
 from datetime import datetime
-import json
 import logging
 import os
 import typing
@@ -691,23 +690,6 @@ def build_and_copy_contents(client, src_dataset, dest_dataset):
 
     LOGGER.info(f'Completed copy of data from unschemaed dataset, '
                 f'`{src_dataset}`, to schemaed dataset, `{dest_dataset}`.')
-
-
-def read_dataset_access_entries(
-        json_path: str) -> typing.List[bigquery.AccessEntry]:
-    """
-    Create a list of dataset access entry objects from a JSON file 
-
-    :param json_path: path to a JSON file that defines dataset access 
-      (structure described at https://tinyurl.com/269xprpe)
-    :return: list of dataset access entries
-    """
-    with open(json_path, 'r', encoding='utf-8') as json_fp:
-        dict_entries = json.load(json_fp)
-    return [
-        bigquery.AccessEntry.from_api_repr(dict_entry)
-        for dict_entry in dict_entries
-    ]
 
 
 def update_dataset_access_entries(
